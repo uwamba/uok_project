@@ -1,0 +1,187 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>OpenVidu Session</title>
+    <link rel="stylesheet" href="style.css" type="text/css" media="screen">
+	<script src="openvidu-browser-2.23.0.js"></script>
+</head>
+<body>
+	<table>
+		<tr>
+         <td>
+			<h3>Local Stream (Your Camera)</h3>
+           <div id="local-video-container" style="width: 700px; height: 500px; border: 2px solid black;"></div>  <!-- Container for the local video stream -->
+		 </td>
+		 <td>
+			<h3>Remote Streams (Other User's Cameras)</h3>
+			<div id="remote-video-container" style="width: 700px; height: 500px; border: 2px solid black;"></div>  <!-- Container for remote video streams -->
+		 </td>
+		</tr>
+	</table>
+    
+    
+
+    <script>
+        // Function to fetch the CSRF token (adjust this according to your setup)
+        function getCSRFToken() {
+            const cookie = document.cookie.split(';').find(row => row.startsWith('csrftoken='));
+            return cookie ? cookie.split('=')[1] : null;
+        }
+
+        // Function to create a token from the backend
+		const sessionId="mySession"
+        async function createToken(sessionId, userName) {
+            const csrftoken = getCSRFToken();
+
+            console.log('Requesting token for sessionId:', sessionId);
+
+            try {
+                const response = await fetch(`http://127.0.0.1:8000/video/generate_token/${sessionId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Basic ' + btoa('OPENVIDUAPP:my_secret'),  // Replace with your OpenVidu secret
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrftoken,  // Include CSRF token if required by your backend
+                    },
+                    body: JSON.stringify({ userName }),  // Send the participant's username in the body
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Request failed with status ${response.status}`);
+                }
+
+                const data = await response.json();  // Parse the JSON response
+                return data.token;  // Return the token
+            } catch (error) {
+                console.error('Error occurred while fetching token:', error);
+                throw error;  // Throw error for further handling if needed
+            }
+        }
+
+        // Function to connect to OpenVidu session
+        async function connectToSession(sessionId, token, userName) {
+            const openvidu = new OpenVidu();  // Create an OpenVidu object
+            const session = openvidu.initSession(); 
+			console.log('sesionnnnnnnnnnnnnnnnnnnnnn',session);
+
+			try {
+                await session.connect(token);  // Pass the token here
+                console.log('Connected to session:', sessionId);
+
+                // 3. Create and publish local stream (the current user's video)
+				const videoConstraints = { resolution: '640x480', frameRate: 30 };
+				const localPublisher = await openvidu.initPublisher('local-video-container', { videoSource: true, audioSource: true, resolution: '640x480' });
+        
+
+				
+				setInterval(() => checkForStreams(session), 2000);
+
+                // Add the local stream to the DOM
+               //document.getElementById('local-video-container').appendChild(localPublisher.getDomElement());
+
+            } catch (error) {
+                console.error('Error connecting to session:', error);
+            }
+			 // Initialize the session object
+			console.log('start of sssssssssssssss     ssssssssss     sssssss Stream created:');
+            // 1. Set the event listeners for stream creation
+			session.on('streamCreated', (event) => {
+				console.log('Stream created:', event.stream.streamId);
+				session.subscribe(event.stream, 'remote-video-container').then(() => {
+					console.log('Subscribed to remote stream:', event.stream.streamId);
+				}).catch((error) => {
+					console.error('Error subscribing to remote stream:', error);
+				});
+			});
+
+            session.on('streamDestroyed', (event) => {
+                console.log('Stream destroyed:', event.stream);  // Handle stream destruction
+            });
+			session.on('exception', (exception) => {
+				console.error('Session exception:', exception);
+			});
+			session.remoteConnections.forEach((connection) => {
+				console.error('Error subscribing to remote stream manually:ooooo', error);
+				connection.streams.forEach((stream) => {
+					session.subscribe(stream, 'remote-video-container')
+						.then(() => {
+							console.log('Manually subscribed to remote stream:', stream.streamId);
+						})
+						.catch((error) => {
+							console.error('Error subscribing to remote stream manually:', error);
+						});
+				});
+			});
+
+            // 2. Connect to the session with the token
+            
+        }
+
+        // Example: Two users connecting to the same session
+       
+
+        // User 1
+        const userName1 = 'User 111';  // Replace with the first participant's username
+        createToken(sessionId, userName1)
+            .then((token) => {
+                connectToSession(sessionId, token, userName1);
+            })
+            .catch((error) => {
+                console.error('Failed to connect User 1 to session:', error);
+            });
+
+        // User 2
+        const userName2 = 'User 222';  // Replace with the second participant's username
+        createToken(sessionId, userName2)
+            .then((token) => {
+                connectToSession(sessionId, token, userName2);
+            })
+            .catch((error) => {
+                console.error('Failed to connect User 2 to session:', error);
+            });
+			const userName3 = 'User 333';  
+		createToken(sessionId, userName3)
+            .then((token) => {
+                connectToSession(sessionId, token, userName2);
+            })
+            .catch((error) => {
+                console.error('Failed to connect User 2 to session:', error);
+            });
+
+
+
+
+
+
+	function checkForStreams(session) {
+
+    const existingStreams = session.remoteConnections;
+ console.log('start subscribing to remote streammmm:',existingStreams);
+    Object.values(existingStreams).forEach((connection) => {
+		console.log('start for each');
+        connection.streams.forEach((stream) => {
+			console.log('for each stream');
+            if (!session.subscriptions[stream.streamId]) {
+				console.log('not subscripbed');
+                // Subscribe to the remote stream if not already subscribed
+                session.subscribe(stream, 'remote-video-container').then(() => {
+                    console.log('Manually subscribed to remote stream:', stream.streamId);
+                }).catch((error) => {
+                    console.error('Error subscribing to remote stream:', error);
+                });
+            }
+        });
+    });
+}
+
+// Adjust interval as needed
+    </script>
+
+</body>
+</html>
+
+
