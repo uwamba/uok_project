@@ -1,0 +1,9 @@
+{% extends 'exams/base.html' %}
+
+{% block title %}Test Results{% endblock %}
+
+{% block content %}
+<h1>{{ result.candidate.user.username }} - {{ result.test.title }}</h1>
+<p>Total Marks: {{ result.total_marks }}</p>
+<p>Test Date: {{ result.date_taken }}</p>
+{% endblock %}

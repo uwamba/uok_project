@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Video Streaming</title>
+    <style>
+        /* Style for progress bar */
+        #progressBar {
+            width: 100%;
+            height: 20px;
+            background-color: #ccc;
+        }
+        #progress {
+            height: 100%;
+            width: 0;
+            background-color: #4caf50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Live Video Streaming</h1>
+
+    <!-- Video Player -->
+    <video id="liveVideo" controls autoplay>
+        <source id="videoSource" src="/stream/video/" type="video/webm">
+        Your browser does not support the video tag.
+    </video>
+
+    <br>
+
+    <!-- Progress Bar -->
+    <div id="progressBar">
+        <div id="progress"></div>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('liveVideo');
+        const progressElement = document.getElementById('progress');
+        const videoSource = document.getElementById('videoSource');
+
+        let videoFileSize = 0;
+        let videoDuration = 0;
+
+        // Poll the server every 500ms to check video file size
+        const checkFileSize = async () => {
+            try {
+                const response = await fetch('/video/video-size/');
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    videoFileSize = data.file_size;
+                    videoDuration = videoElement.duration;
+
+                    // Calculate the percentage of the video uploaded and update the progress bar
+                    const percentageUploaded = (videoFileSize / videoDuration) * 100;
+                    progressElement.style.width = `${percentageUploaded}%`;
+
+                    // If video size is increasing, continue playing; otherwise, pause until more data is uploaded
+                    if (videoElement.paused && percentageUploaded < 100) {
+                        videoElement.play();
+                    }
+                }
+            } catch (error) {
+                console.error("Error checking file size:", error);
+            }
+        };
+
+        // Call checkFileSize every 500ms
+        setInterval(checkFileSize, 500);
+    </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<div>
+    <h2>OpenVidu Video Session</h2>
+    <div>
+      <label>Session ID: </label>
+      <input id="session-id" type="text" [(ngModel)]="sessionId">
+    </div>
+    <div>
+      <label>Username: </label>
+      <input id="user-name" type="text" [(ngModel)]="userName" placeholder="Enter your name" />
+    </div>
+    <button (click)="joinSession(sessionId, userName)">Join</button>
+    <button (click)="leaveSession()">Leave</button>
+  </div>
+  <div id="video-container" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+  

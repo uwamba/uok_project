@@ -1,0 +1,25 @@
+<h1>Monitoring Logs</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Timestamp</th>
+            <th>Activity Type</th>
+            <th>Data</th>
+            <th>Screenshot</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in logs %}
+        <tr>
+            <td>{{ log.timestamp }}</td>
+            <td>{{ log.activity_type }}</td>
+            <td>{{ log.data }}</td>
+            <td>
+                {% if log.screenshot %}
+                <img src="{{ log.screenshot.url }}" alt="Screenshot" width="100">
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

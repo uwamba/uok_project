@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Camera Test</title>
+    {% csrf_token %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Include jQuery -->
+</head>
+<body>
+    <h1>Candidate Camera Feed</h1>
+    <video id="localVideo" autoplay playsinline width="640" height="480"></video>
+    
+    <script>
+    const video = document.getElementById('localVideo');
+
+    // Function to get CSRF token
+    function getCSRFToken() {
+        let cookieValue = null;
+        document.cookie.split(';').forEach(function(cookie) {
+            if (cookie.trim().startsWith('csrftoken=')) {
+                cookieValue = cookie.trim().substring('csrftoken='.length);
+            }
+        });
+        return cookieValue;
+    }
+
+    // Access the user's camera and send the offer using AJAX
+    navigator.mediaDevices.getUserMedia({ video: true, audio: false }).then(stream => {
+        video.srcObject = stream;
+        const pc = new RTCPeerConnection();
+        pc.addTrack(stream.getTracks()[0], stream);
+
+        pc.createOffer().then(offer => {
+    console.log("Generated Offer:", offer);
+
+    // Send offer to the server
+    return $.ajax({
+        url: '/stream/offer/',
+        type: 'POST',
+        data: JSON.stringify({
+            offer: {
+                sdp: offer.sdp,
+                type: offer.type
+            }
+        }),
+        contentType: 'application/json',
+        headers: {
+            'X-CSRFToken': getCSRFToken()
+        }
+    });
+}).then(response => {
+    console.log("Received Answer:", response);
+
+    // Check if the peer connection is in the correct state before setting remote description
+    if (pc.signalingState === 'stable' || pc.signalingState === 'have-local-offer') {
+        pc.setRemoteDescription(new RTCSessionDescription(response.answer))
+            .then(() => {
+                console.log("Remote description set successfully");
+            })
+            .catch(error => {
+                console.error("Error setting remote description:", error);
+            });
+    } else {
+        console.warn("Peer connection is not in stable state for setting remote description");
+    }
+}).catch(error => {
+    console.error("Error:", error);
+});
+    }).catch(error => {
+        console.error('Error accessing camera:', error);
+    });
+
+
+    </script>
+</body>
+</html>

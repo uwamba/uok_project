@@ -1,0 +1,21 @@
+<script>
+const video = document.querySelector('video');
+navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+    video.srcObject = stream;
+    video.play();
+    const ws = new WebSocket('ws://localhost:8000/ws/camera/');
+    ws.onopen = () => {
+        setInterval(() => {
+            // Send video frame (convert to base64 or another format)
+            ws.send(JSON.stringify({ frame: captureFrame(video) }));
+        }, 100);
+    };
+});
+function captureFrame(videoElement) {
+    const canvas = document.createElement('canvas');
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+    canvas.getContext('2d').drawImage(videoElement, 0, 0);
+    return canvas.toDataURL('image/png');
+}
+</script>

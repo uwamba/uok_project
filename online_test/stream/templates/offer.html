@@ -1,0 +1,132 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Video Call</title>
+</head>
+<body>
+    <h1>Video Call</h1>
+    <div>
+        <h3>Local Video</h3>
+        <video id="local-video" autoplay muted playsinline ></video>
+    </div>
+    <div>
+        <h3>Remote Video</h3>
+        <video id="remote-video" autoplay playsinline></video>
+        
+    </div>
+    <script>
+        const roomName = "test-room";  // Replace with dynamic room name if needed
+        const ws = new WebSocket(`ws://${window.location.host}/ws/call/${roomName}/`);
+
+        const localVideo = document.getElementById("local-video");
+        const remoteVideo = document.getElementById("remote-video");
+
+        const peerConnection = new RTCPeerConnection({
+            iceServers: [{ urls: "stun:stun.l.google.com:19302" }]  // Public STUN server
+        });
+
+        // Send ICE candidates to the other peer via WebSocket
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                ws.send(JSON.stringify({
+                    type: "candidate",
+                    candidate: event.candidate.candidate,
+                    sdpMid: event.candidate.sdpMid,
+                    sdpMLineIndex: event.candidate.sdpMLineIndex
+                }));
+            }
+        };
+
+     
+        peerConnection.ontrack = async (event) => {
+            console.log('Remote video is starting.');
+            try {
+                const remoteStream = event.streams[0];
+
+                const remoteVideo = document.getElementById('remote-video');
+                remoteVideo.addEventListener('loadeddata', () => {
+                    remoteVideo.srcObject = remoteStream;
+                });
+                
+                await remoteVideo.play();
+                console.log('Remote video is playing.');
+            } catch (error) {
+                console.error('Error attempting to play the remote video:', error);
+            }
+        };
+
+      // Get local media stream
+          navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then((stream) => {
+                localVideo.srcObject = stream;
+                stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+            })
+            .catch((error) => console.error("Error accessing media devices:", error));
+
+        // Add the remote stream to the video element
+       
+
+       
+        // Handle WebSocket messages
+        ws.onmessage = async (event) => {
+            const data = JSON.parse(event.data);
+
+            if (data.type === "offer") {
+                console.log("Received offer:", data);
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
+
+                // Create and send an answer
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+
+                ws.send(JSON.stringify({
+                    type: "answer",
+                    sdp: answer.sdp
+                }));
+            } else if (data.type === "answer") {
+                console.log("Received answer:", data);
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
+            } else if (data.type === "candidate") {
+                console.log("Received candidate:", data);
+                const candidate = new RTCIceCandidate({
+                    candidate: data.candidate,
+                    sdpMid: data.sdpMid,
+                    sdpMLineIndex: data.sdpMLineIndex
+                });
+                await peerConnection.addIceCandidate(candidate);
+            } else {
+                console.warn("Unknown message type received:", data);
+            }
+        };
+
+        ws.onopen = () => {
+            console.log("WebSocket connection established.");
+            // Create an offer and send it to the server
+            peerConnection.createOffer()
+                .then((offer) => {
+                    return peerConnection.setLocalDescription(offer);
+                })
+                .then(() => {
+                    ws.send(JSON.stringify({
+                        type: "offer",
+                        sdp: peerConnection.localDescription.sdp
+                    }));
+                })
+                .catch((error) => console.error("Error creating offer:", error));
+        };
+
+        ws.onclose = () => {
+            console.log("WebSocket connection closed.");
+        };
+
+        ws.onerror = (error) => {
+            console.error("WebSocket error:", error);
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<video id="videoElement" autoplay></video>
+<button id="startRecording">Start Recording</button>
+<button id="stopRecording" disabled>Stop Recording</button>
+
+<script>
+  let mediaRecorder;
+  let recordedChunks = [];
+  let chunkIndex = 0;
+  let uploadInProgress = false;
+  
+  document.getElementById('startRecording').onclick = startRecording;
+  document.getElementById('stopRecording').onclick = stopRecording;
+
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true
+      });
+      document.getElementById('videoElement').srcObject = stream;
+
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.ondataavailable = handleDataAvailable;
+      mediaRecorder.onstop = handleStop;
+      mediaRecorder.start(1000); // Collect data every 1 second (adjust as needed)
+
+      document.getElementById('stopRecording').disabled = false;
+      document.getElementById('startRecording').disabled = true;
+    } catch (err) {
+      console.error("Error capturing screen: ", err);
+    }
+  }
+
+  function handleDataAvailable(event) {
+    if (event.data.size > 0) {
+      recordedChunks.push(event.data);
+      
+      // Upload the chunk as soon as it's available
+      if (!uploadInProgress) {
+        uploadChunk(recordedChunks[recordedChunks.length - 1]);
+      }
+    }
+  }
+
+  function stopRecording() {
+    mediaRecorder.stop();
+    document.getElementById('stopRecording').disabled = true;
+  }
+
+  function handleStop() {
+    console.log("Recording stopped.");
+  }
+
+  function uploadChunk(chunk) {
+    uploadInProgress = true;
+    
+    const formData = new FormData();
+    formData.append("video_chunk", chunk, `chunk_${chunkIndex++}.webm`);
+
+    fetch("/video/upload_video/", {
+      method: "POST",
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log("Chunk uploaded successfully:", data);
+      uploadInProgress = false;  // Allow the next chunk to upload
+    })
+    .catch(error => {
+      console.error("Error uploading chunk:", error);
+      uploadInProgress = false;  // Retry the chunk later
+    });
+  }
+</script>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenVidu Video Conference</title>
+</head>
+<body>
+    <h1>OpenVidu Video Conference</h1>
+
+    <button onclick="startSession()">Start New Session</button>
+
+    <script>
+        function startSession() {
+            fetch('/video/create_session/')
+                .then(response => response.json())
+                .then(data => {
+                    const sessionId = data.id;
+                    console.log("Session Created: " + sessionId);
+                    
+                    // Generate a token
+                    fetch('/video/generate_token/', {
+                        method: 'POST',
+                        body: new URLSearchParams({
+                            'session_id': sessionId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(tokenData => {
+                        const token = tokenData.token;
+                        console.log("Generated Token: " + token);
+                        
+                        // Initialize OpenVidu video call with the token and session
+                        const OV = new OpenVidu();
+                        const session = OV.initSession();
+                        
+                        session.connect(token)
+                            .then(() => {
+                                // Video elements for local and remote participants
+                                const publisher = OV.initPublisher('video-container');
+                                session.publish(publisher);
+                            })
+                            .catch(error => {
+                                console.error('Error connecting to session: ', error);
+                            });
+                    });
+                });
+        }
+    </script>
+
+    <div id="video-container"></div>
+</body>
+</html>

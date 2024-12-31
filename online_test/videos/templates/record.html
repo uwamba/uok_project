@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Video Stream</title>
+</head>
+<body>
+    <h1>Record and Stream Live Video</h1>
+
+    <!-- Webcam Preview -->
+    <video id="webcam" autoplay muted></video>
+    <button id="startBtn">Start Recording</button>
+    <button id="stopBtn" disabled>Stop Recording</button>
+
+    <!-- Live Video Playback -->
+    <h2>Live Stream</h2>
+    <video id="liveVideo" controls autoplay>
+        <source src="/video/stream/" type="video/webm">
+        Your browser does not support the video tag.
+    </video>
+
+    <script>
+        const webcam = document.getElementById('webcam');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+
+        let mediaRecorder;
+
+        // Start Webcam Stream
+        async function startWebcam() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                webcam.srcObject = stream;
+
+                mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        uploadChunk(event.data);
+                    }
+                };
+
+                startBtn.addEventListener('click', startRecording);
+                stopBtn.addEventListener('click', stopRecording);
+            } catch (error) {
+                console.error('Error accessing webcam:', error);
+            }
+        }
+
+        // Start Recording
+        function startRecording() {
+            mediaRecorder.start(1000); // Send chunks every 1 second
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            console.log('Recording started...');
+        }
+
+        // Stop Recording
+        function stopRecording() {
+            mediaRecorder.stop();
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            console.log('Recording stopped...');
+        }
+
+        // Upload Video Chunk to the Server
+        function uploadChunk(chunk) {
+            const formData = new FormData();
+            formData.append('videoChunk', chunk, `chunk-${Date.now()}.webm`);
+
+            fetch('/video/upload/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(error => console.error('Error uploading chunk:', error));
+        }
+
+        startWebcam();
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,84 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenVidu Video Conference</title>
+    <!-- Include OpenVidu Browser Script -->
+    <script src="https://unpkg.com/openvidu-browser/dist/openvidu-browser.min.js"></script>
+
+</head>
+<body>
+    <h1>OpenVidu Video Conference</h1>
+    <button onclick="startSession()">Start New Session</button>
+
+    <!-- Container for Local Video -->
+    <div id="local-video-container" style="width: 100%; height: 400px;"></div>
+    
+    <!-- Container for Remote Video -->
+    <div id="remote-video-container" style="width: 100%; height: 400px;"></div>
+
+    <script>
+    function getCSRFToken() {
+        const name = 'csrftoken';
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [key, value] = cookie.trim().split('=');
+            if (key === name) {
+                return decodeURIComponent(value);
+            }
+        }
+        return null;
+    }
+    function startSession() {
+        const csrftoken = getCSRFToken();
+
+        fetch('/video/create_session/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken  // Include the CSRF token here
+            },
+            body: JSON.stringify({})  // Adjust payload as needed
+        })
+        .then(response => response.json())
+        .then(data => {
+            const sessionId = data.id;
+            console.log("Session Created: " + sessionId);
+            
+            // Generate a token
+            fetch(`/video/generate_token/?session_id=${sessionId}`, {
+                method: 'GET',
+            })
+            .then(response => response.json())
+            .then(tokenData => {
+                const token = tokenData.token;
+                console.log("Generated Token: " + token);
+                
+                // Initialize OpenVidu video call with the token and session
+                const OV = new OpenVidu(); // Ensure this is loaded before usage
+                const session = OV.initSession();
+
+                // Listen to the 'streamCreated' event for remote participants
+                session.on('streamCreated', (event) => {
+                    const subscriber = session.subscribe(event.stream, 'remote-video-container');
+                });
+
+                // Connect to the session with the token
+                session.connect(token)
+                    .then(() => {
+                        // Video elements for local participant
+                        const publisher = OV.initPublisher('local-video-container');
+                        session.publish(publisher);
+                    })
+                    .catch(error => {
+                        console.error('Error connecting to session: ', error);
+                    });
+            });
+        })
+        .catch(error => {
+            console.error('Error creating session:', error);
+        });
+    }
+    </script>
+</body>
+</html>

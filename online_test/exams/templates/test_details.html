@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Test Details{% endblock %}
+
+{% block content %}
+{% load custom_filters %}
+
+<h2>{{ test.title }}</h2>
+<p><strong>Subject:</strong> {{ test.subject.name }} | <strong>Total Marks:</strong> {{ test.total_marks }}</p>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% for question in questions %}
+    <div class="mb-3">
+        <h4>{{ question.text }}</h4>
+
+        {% if question.image %}
+            <img src="{{ question.image.url }}" alt="Question Image" class="img-fluid">
+        {% endif %}
+
+        {% if question.question_type == 'single' or question.question_type == 'multiple' %}
+            {% for option in question.options.all %}
+                <div class="form-check">
+                    <input class="form-check-input" 
+                           type="{% if question.question_type == 'single' %}radio{% else %}checkbox{% endif %}" 
+                           id="option_{{ question.id }}_{{ option.id }}" 
+                           name="question_{{ question.id }}" 
+                           value="{{ option.id }}" 
+                           disabled
+                           {% if option.id in selected_option_ids %} checked {% endif %}>
+                    <label class="form-check-label" for="option_{{ question.id }}_{{ option.id }}">
+                        {{ option.text }}
+                        {% if option.is_correct %}
+                            <span class="text-success">✔ Correct answer</span>
+                        {% elif option.id in selected_option_ids %}
+                            <span class="text-danger">✖ Incorrect answer</span>
+                        {% endif %}
+                        
+                    </label>
+                </div>
+            {% endfor %}
+        {% elif question.question_type == 'text' %}
+            {% for result_text in results_answers %}
+               {% if result_text.answer_text and question.id == result_text.question_id %}
+               <div class="form-control" style="background-color: #f8f9fa;" disabled>
+                {{ result_text.answer_text }} 
+                <span class="text-danger">Your answer</span>
+            </div>
+            <div class="form-control" style="background-color: #f8f9fa;" disabled>
+                {{ question.answer_text }} 
+                <span class="text-success">✔ Correct answer</span>
+            </div>
+            
+                {% endif %}
+                    
+            {% endfor %}
+        {% endif %}
+    </div>
+{% endfor %}
+
+</form>
+{% endblock %}
