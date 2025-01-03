@@ -35,7 +35,13 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
 ]
 
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    
+]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",  # Angular development server
+    "http://127.0.0.1:4200",  # Angular running on localhost
+]
 
 # Application definition
 
@@ -179,3 +185,17 @@ LOGGING = {
         },
     },
 }
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}
+

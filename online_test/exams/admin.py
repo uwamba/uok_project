@@ -12,7 +12,7 @@ class QuestionOptionInline(admin.TabularInline):
 
 class QuestionAdmin(admin.ModelAdmin):
     list_display = ['text', 'question_type', 'marks']
-    list_filter = ['question_type']
+    list_filter = ['question_type','test']
     inlines = [QuestionOptionInline]
 
 admin.site.register(Question, QuestionAdmin)

@@ -28,7 +28,20 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import LoginSerializer
+from rest_framework.decorators import api_view
+from django.http import JsonResponse
+from rest_framework_simplejwt.tokens import RefreshToken  # For JWT
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view, permission_classes
 
+
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
 # Create your views here.
 # Candidate registration
 def candidate_register(request):
@@ -62,9 +75,23 @@ class LoginView(APIView):
             username = serializer.validated_data['username']
             password = serializer.validated_data['password']
             user = authenticate(request, username=username, password=password)
+
             if user is not None:
-                # For simplicity, you can return a success message or a JWT token if you're using token-based auth
-                return Response({"message": "Login successful"}, status=status.HTTP_200_OK)
+                # Generate JWT tokens
+                refresh = RefreshToken.for_user(user)
+                return Response({
+                    "message": "Login successful",
+                    "access_token": str(refresh.access_token),  # Access token for frontend use
+                    "refresh_token": str(refresh),  # Refresh token
+                    "user": {
+                        "id": user.id,
+                        "username": user.username,
+                        "email": user.email,
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,
+                    }
+                }, status=status.HTTP_200_OK)
+
             return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -118,8 +145,105 @@ def candidate_dashboard(request):
     results = Result.objects.filter(candidate=request.user.candidate).select_related('test')
     return render(request, 'dashboard.html', {'tests': tests,'results':results})
 
-@login_required
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+@csrf_exempt  # For simplicity, use @csrf_exempt while testing; use proper CSRF handling in production
 def take_test(request, test_id):
+   
+    
+    test = Test.objects.get(id=test_id)
+    questions = test.questions.all().order_by('?')
+    candidate = Candidate.objects.get(user=request.user)
+    now = timezone.now()
+    remaining_time = (test.end_time - now).total_seconds() if test.end_time else 0
+    
+    # Monitoring logic
+    user = request.user
+    exam = Test.objects.get(id=test_id)
+    screen_thread = threading.Thread(target=capture_screen, args=(user, exam))
+    webcam_thread = threading.Thread(target=monitor_webcam, args=(user, exam))
+    #screen_thread.start()
+    #webcam_thread.start()
+
+    # For GET request, return test data and remaining time
+    if request.method == 'GET':
+        return JsonResponse({
+            'test': {
+                'id': test.id,
+                'name': test.title,
+                'description': test.title,
+                'questions': [{
+                    'id': q.id,
+                    'text': q.text,
+                    'question_type': q.question_type,
+                    'max_selection':q.max_selection,
+                    'options': [{
+                        'id': o.id,
+                        'text': o.text
+                    } for o in q.options.all()]
+                } for q in questions]
+            },
+            'remaining_time': max(0, int(remaining_time))
+        })
+
+    # For POST request, calculate and save score
+    elif request.method == 'POST':
+        score = 0
+        result = Result.objects.create(candidate=candidate, test=test, total_marks=score)
+        answers_data = request.data.get('answers', [])
+        print(answers_data)
+        score = 0
+        result = Result.objects.create(candidate=candidate, test=test, total_marks=score)
+        answers_data = request.data.get('answers', [])
+
+        for question in questions:
+            selected_option_ids = [
+                item['answer'] for item in answers_data if item['question_id'] == question.id
+            ]
+            selected_option_ids = selected_option_ids[0] if selected_option_ids else []
+
+            if question.question_type == 'multiple':
+                correct_option_count = QuestionOption.objects.filter(
+                    question_id=question.id, is_correct=True
+                ).count()
+                for option_id in selected_option_ids:
+                    selected_option = QuestionOption.objects.get(id=option_id)
+                    ResultDetail.objects.create(
+                        result=result, question=question, selected_option=selected_option
+                    )
+                    if selected_option.is_correct:
+                        score += question.marks / correct_option_count
+
+            elif question.question_type == 'single':
+                if selected_option_ids:
+                    selected_option = QuestionOption.objects.get(id=selected_option_ids[0])
+                    ResultDetail.objects.create(
+                        result=result, question=question, selected_option=selected_option
+                    )
+                    if selected_option.is_correct:
+                        score += question.marks
+
+            elif question.question_type == 'text':
+                answer_text=""
+                if selected_option_ids:
+                 answer_text = selected_option_ids[0]
+                answer = mark_text_question(answer_text, question.answer_text)
+                
+                ResultDetail.objects.create(
+                    result=result, question=question, selected_option=None, answer_text=answer_text
+                )
+                score += question.marks * answer["percentage_score"] / 100
+
+        result.total_marks = score
+        result.save()
+
+
+        return JsonResponse({'result_id': result.id})
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+@login_required
+def take_test2(request, test_id):
     test = Test.objects.get(id=test_id)
     questions = test.questions.all().order_by('?')
 
@@ -298,7 +422,7 @@ def mark_text_question(candidate_answer, correct_answer, threshold=0.1, min_scor
     vectorizer = TfidfVectorizer().fit([cleaned_candidate_answer, cleaned_correct_answer])
     tfidf_matrix = vectorizer.transform([cleaned_candidate_answer, cleaned_correct_answer])
     similarity_score = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
-
+    print('similarirt scoresss',similarity_score)
     # Calculate percentage score based on similarity
     percentage_score = similarity_to_percentage(similarity_score, min_score=min_score)
 
@@ -323,7 +447,7 @@ def similarity_to_percentage(similarity_score, min_score=0.1, quick_rise_factor=
     Converts a similarity score into a percentage, scaling it from min_score to 100.
     """
     print('sim score',similarity_score)
-    if similarity_score < 0.1:
+    if similarity_score < 0.2:
         return 0  # 0% for scores in the range 0-0.1
     elif 0.2 <= similarity_score < 0.5:
         # Map 0.3-0.5 to 30%-80%
