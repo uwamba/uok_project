@@ -133,11 +133,12 @@ OPENVIDU_URL = "http://localhost:4443"  # Adjust based on your OpenVidu setup
 OPENVIDU_SECRET = "my_secret"  # Replace with your actual secret key
 USERNAME = "OPENVIDUAPP"
 @csrf_exempt
+
 def create_session(request):
- 
     data = json.loads(request.body)
     customSessionId = data.get('customSessionId')
-    print("0000000000000",customSessionId)
+    print("0000000000000", customSessionId)
+    
     url = "http://localhost:4443/openvidu/api/sessions"
     OPENVIDU_SECRET = "my_secret"
     USERNAME = "OPENVIDUAPP"
@@ -149,44 +150,48 @@ def create_session(request):
 
     # Payload for the request
     payload = json.dumps({
-    "mediaMode": "ROUTED",
-    "recordingMode": "MANUAL",
-    "customSessionId": customSessionId,
-    "forcedVideoCodec": "VP8",
-    "allowTranscoding": False,
-    "defaultRecordingProperties": {
-        "name": "MyRecording",
-        "hasAudio": True,
-        "hasVideo": True,
-        "outputMode": "COMPOSED",
-        "recordingLayout": "BEST_FIT",
-        "resolution": "1280x720",
-        "frameRate": 25,
-        "shmSize": 536870912,
+        "mediaMode": "ROUTED",
+        "recordingMode": "MANUAL",
+        "customSessionId": customSessionId,
+        "forcedVideoCodec": "VP8",
+        "allowTranscoding": False,
+        "defaultRecordingProperties": {
+            "name": "MyRecording",
+            "hasAudio": True,
+            "hasVideo": True,
+            "outputMode": "COMPOSED",
+            "recordingLayout": "BEST_FIT",
+            "resolution": "1280x720",
+            "frameRate": 25,
+            "shmSize": 536870912,
+            "mediaNode": {
+                "id": "media_i-0c58bcdd26l11d0sd"
+            }
+        },
         "mediaNode": {
-        "id": "media_i-0c58bcdd26l11d0sd"
+            "id": "media_i-0c58bcdd26l11d0sd"
         }
-    },
-    "mediaNode": {
-        "id": "media_i-0c58bcdd26l11d0sd"
-    }
     })
 
     # Headers
     headers = {
-    'Content-Type': 'application/json',
-    'Authorization': f'Basic {auth_base64}',
+        'Content-Type': 'application/json',
+        'Authorization': f'Basic {auth_base64}',
     }
+
     try:
-    # Make the POST request
-      response = requests.post(url, headers=headers, data=payload)
-      response.raise_for_status()
-      return response.json()["sessionId"]
+        # Make the POST request
+        response = requests.post(url, headers=headers, data=payload)
+        response.raise_for_status()
+
+        # Return the sessionId as a JsonResponse
+        session_id = response.json().get("id")
+        return JsonResponse({"sessionId": session_id}, status=200)
+
     except requests.exceptions.HTTPError as err:
         # Handle specific HTTP errors
         if err.response.status_code == 409:
             # Session already exists in OpenVidu
-            #return JsonResponse({"customSessionId": response.get("customSessionId")}, status=409)
             return JsonResponse({"customSessionId": customSessionId}, status=409)
         else:
             # Return the error response
@@ -195,8 +200,7 @@ def create_session(request):
     except json.JSONDecodeError:
         # Handle JSON parsing errors
         return JsonResponse({"error": "Invalid JSON body"}, status=400)
-    # Print response
-    print("Status Code:", response.status_code)
+
     
 # OpenVidu server URL and secret
 OPENVIDU_URL = 'http://localhost:4443'  # Adjust with your OpenVidu server URL

@@ -2,10 +2,12 @@ import threading
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 
+from .serializers import TestSerializer
 from results.models import Result, ResultDetail
 from videos.models import MonitoringLog
 from videos.utils import capture_screen, monitor_webcam
 from .models import Question, QuestionOption, Test
+from rest_framework import generics, permissions
 
 def test_detail(request, test_id,result_id):
     test = get_object_or_404(Test, id=test_id)
@@ -28,4 +30,15 @@ def test_detail(request, test_id,result_id):
     }
     return render(request, 'test_details.html', context)
 
+class CandidateTestListView(generics.ListAPIView):
+    serializer_class = TestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Get the candidate linked to the authenticated user
+        user = self.request.user
+        candidate = getattr(user, 'candidate', None)
+        if candidate:
+            return Test.objects.filter(candidates=candidate)
+        return Test.objects.none()
 
