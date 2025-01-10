@@ -16,7 +16,7 @@ from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
 from django.utils.timezone import now
 from django.contrib import messages
-from .models import Candidate
+from .models import Admin, Candidate
 import threading
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
@@ -53,19 +53,6 @@ def candidate_register(request):
         return redirect('candidate_login')
     return render(request, 'register.html')
 
-# Candidate login
-def candidate_login(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('dashboard')
-        else:
-            return render(request, 'login.html', {'error': 'Invalid credentials'})
-    return render(request, 'login.html')
-
 
 
 class LoginView(APIView):
@@ -95,42 +82,62 @@ class LoginView(APIView):
             return Response({"error": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-def candidate_login_new(request):
+
+
+def candidate_login(request):
     if request.method == 'POST':
         username = request.POST['username']
         password = request.POST['password']
-        
-        # Authenticate the user
+
         user = authenticate(request, username=username, password=password)
-        
+
         if user is not None:
-            try:
-                candidate = Candidate.objects.get(user=user)
-                current_time = now()
-                
-                # Check if the candidate's access is within the allowed time window
-                if candidate.access_start_time and current_time < candidate.access_start_time:
-                    messages.error(request, "You are not allowed to access the system yet.")
+
+            # Check user role and redirect accordingly
+            if user.is_admin:
+                print('admin logging')
+                try:
+                    admin = Admin.objects.get(user=user)
+                    
+                    # If everything is okay, log the user in
+                    login(request, user)
+                    return redirect('admin_dashboard')
+
+                except admin.DoesNotExist:
+                    messages.error(request, "Candidate profile not found.")
                     return render(request, 'login.html')
-                
-                if candidate.access_end_time and current_time > candidate.access_end_time:
-                    messages.error(request, "Your access time has expired.")
+            elif user.is_candidate:
+                print('candidate logging')
+                try:
+                    candidate = Candidate.objects.get(user=user)
+                    current_time = now()
+                    
+                    # Check if the candidate's access is within the allowed time window
+                    if candidate.access_start_time and current_time < candidate.access_start_time:
+                        messages.error(request, "You are not allowed to access the system yet.")
+                        return render(request, 'login.html')
+                    
+                    if candidate.access_end_time and current_time > candidate.access_end_time:
+                        messages.error(request, "Your access time has expired.")
+                        return render(request, 'login.html')
+
+                    # If everything is okay, log the user in
+                    login(request, user)
+                    return redirect('dashboard')
+
+                except Candidate.DoesNotExist:
+                    messages.error(request, "Candidate profile not found.")
                     return render(request, 'login.html')
-
-                # If everything is okay, log the user in
-                login(request, user)
-                return redirect('dashboard')
-
-            except Candidate.DoesNotExist:
-                messages.error(request, "Candidate profile not found.")
-                return render(request, 'login.html')
-
+            else:
+                messages.error(request, "Invalid user role.")
+                return redirect('login')
         else:
-            messages.error(request, "Invalid credentials")
-            return render(request, 'login.html')
+            messages.error(request, "Invalid username or password.")
+            return redirect('login')
 
     return render(request, 'login.html')
-# Candidate logout
+
+
 @login_required
 def candidate_logout(request):
     logout(request)
@@ -140,15 +147,22 @@ def candidate_logout(request):
 @login_required
 def candidate_dashboard(request):
 
-    candidate = Candidate.objects.get(user=request.user.candidate.id)
+    candidate = Candidate.objects.get(user=request.user.id)
     tests = candidate.tests.all()
     results = Result.objects.filter(candidate=request.user.candidate).select_related('test')
     return render(request, 'dashboard.html', {'tests': tests,'results':results})
+@login_required
+def admin_dashboard(request):
+
+   # admin = Admin.objects.get(user=request.user.id)
+    tests =Test.objects.filter(created_by=request.user.id)
+    results = Result.objects.all()
+    return render(request, 'admin_dashboard.html', {'tests': tests,'results':results})
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 @csrf_exempt  # For simplicity, use @csrf_exempt while testing; use proper CSRF handling in production
-def take_test(request, test_id):
+def take_test_api(request, test_id):
    
     
     test = Test.objects.get(id=test_id)
@@ -243,7 +257,7 @@ def take_test(request, test_id):
         return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 @login_required
-def take_test2(request, test_id):
+def take_test(request, test_id):
     test = Test.objects.get(id=test_id)
     questions = test.questions.all().order_by('?')
 
@@ -264,8 +278,8 @@ def take_test2(request, test_id):
     # Start monitoring in separate threads
     screen_thread = threading.Thread(target=capture_screen, args=(user, exam))
     webcam_thread = threading.Thread(target=monitor_webcam, args=(user, exam))
-    screen_thread.start()
-    webcam_thread.start()
+    #screen_thread.start()
+    #webcam_thread.start()
    
 
 
@@ -335,7 +349,99 @@ def take_test2(request, test_id):
             return render(request, 'take_test.html', {'test': test, 'questions': questions,'remaining_time': max(0, int(remaining_time)), })
         else:
             return redirect('dashboard')
-  
+def test_monitor(request, test_id):
+    test = Test.objects.get(id=test_id)
+    questions = test.questions.all().order_by('?')
+
+    # Ensure the user has an associated Candidate instance
+    candidate = Candidate.objects.get(user=request.user)
+    now = timezone.now()  # Use Django's timezone.now()
+    print('time now',now)
+    remaining_time = (test.end_time - now).total_seconds() if test.end_time else 0
+    
+    print('test time',test.end_time)
+    print('remaining time ',remaining_time)
+    
+    #start monitoring user test session
+    print('start minitoring')
+    user = request.user
+    exam = Test.objects.get(id=test_id)
+
+    # Start monitoring in separate threads
+    screen_thread = threading.Thread(target=capture_screen, args=(user, exam))
+    webcam_thread = threading.Thread(target=monitor_webcam, args=(user, exam))
+    #screen_thread.start()
+    #webcam_thread.start()
+   
+
+
+    if request.method == 'POST':
+        
+        
+        score = 0
+        # Create the result object
+        result = Result.objects.create(candidate=candidate, test=test, total_marks=score)
+        
+        # Loop through the questions and store result details
+        for question in questions:
+            selected_option_ids = request.POST.getlist(str(question.id))  # This will get all selected options for multiple choice
+            
+            if question.question_type == 'multiple':  # For multiple answers
+                # Iterate through selected options for multiple-choice questions  
+                qm=question.marks
+                correct_option_count = QuestionOption.objects.filter(question_id=int(question.id)).count()
+                print("multiple question found")
+                for option_id in selected_option_ids:
+                    selected_option = QuestionOption.objects.get(id=int(option_id))
+                    
+                    
+                    ResultDetail.objects.create(result=result, question=question, selected_option=selected_option)
+                    # Check if the option is correct
+                    if selected_option.is_correct: # Assuming 'correct_options' is a many-to-many field
+                        score += qm/correct_option_count
+            elif question.question_type == 'single':  # For single choice (single option selected)
+                if selected_option_ids:
+                    print("single question found")
+                    selected_option = QuestionOption.objects.get(id=int(selected_option_ids[0]))
+                    # Check if the option is correct
+                    ResultDetail.objects.create(result=result, question=question, selected_option=selected_option)
+                    if selected_option.is_correct: # Assuming 'correct_options' is a many-to-many field
+                        score += qm
+                  
+                    
+            elif question.question_type == 'text':  # For text input questions
+                answer_text = request.POST.get(str(question.id))  # Get the user's answer as text
+
+                # Compute similarity
+                answer = mark_text_question(answer_text, question.answer_text)
+                score += qm * answer["percentage_score"]/100
+                
+                #answer = mark_text_question(sentence1, sentence2)
+                print("Is Correct:", answer["is_correct"])
+                print("Similarity Score:", answer["similarity_score"])
+                print("percentage Score:", answer["percentage_score"])
+                print("Feedback:", answer["feedback"])
+                
+                
+
+                ResultDetail.objects.create(result=result, question=question, selected_option=None, answer_text=answer_text)
+                if answer_text == question.answer_text:  # Compare with correct answer
+                    score += 1
+                    # Optionally, store text answer as a ResultDetail if required
+                    
+
+        # After processing all answers, update the total marks in the result object
+        result.total_marks = score
+        result.save()
+
+        # Redirect to the result view page
+        return redirect('result', result_id=result.id)
+    else:
+        if remaining_time > 0:
+            return render(request, 'test_monitor.html', {'test': test, 'questions': questions,'remaining_time': max(0, int(remaining_time)), })
+        else:
+            return redirect('dashboard')
+    
 
 @login_required
 def view_result(request, result_id):

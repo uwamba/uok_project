@@ -18,6 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 import base64
 import random
+from requests.auth import HTTPBasicAuth
 
 # Generate a random integer between a range
 random_integer = random.randint(1000, 10000)  # Random integer between 1 and 100
@@ -186,6 +187,7 @@ def create_session(request):
 
         # Return the sessionId as a JsonResponse
         session_id = response.json().get("id")
+        print('session id from dajngo create session function',session_id)
         return JsonResponse({"sessionId": session_id}, status=200)
 
     except requests.exceptions.HTTPError as err:
@@ -205,13 +207,22 @@ def create_session(request):
 # OpenVidu server URL and secret
 OPENVIDU_URL = 'http://localhost:4443'  # Adjust with your OpenVidu server URL
 OPENVIDU_SECRET = 'my_secret'  # Replace with your OpenVidu secret
-
+def check_session_exists(session_id):
+    """
+    Check if a session exists on the OpenVidu server.
+    """
+    url = f"{OPENVIDU_URL}/openvidu/api/sessions/{session_id}"
+    response = requests.get(url, auth=HTTPBasicAuth('OPENVIDUAPP', OPENVIDU_SECRET))
+    return response.status_code == 200
 @csrf_exempt
 def generate_token(request, session_id):
     if request.method == 'POST':
         
-      
+        
         try:
+            
+            if not check_session_exists(session_id):
+              raise Exception(f"Session {session_id} does not exist.")
             # Construct the authorization string for OpenVidu
             auth_string = f"{USERNAME}:{OPENVIDU_SECRET}"
             auth_bytes = auth_string.encode("utf-8")
@@ -347,3 +358,20 @@ def video_conf(request):
     return render(request, 'openvidu.html')
 def testing(request):
     return render(request, 'index.html')
+
+
+# OpenVidu server credentials
+
+def monitor_candidate(request, test_id):
+    # Create an OpenVidu session
+    #openvidu = OpenVidu(OPENVIDU_URL, OPENVIDU_SECRET)
+    #session = openvidu.create_session()
+
+    # Generate a token for the candidate
+   # token = session.generate_token()
+
+    return render(request, 'admin/monitor_candidate.html', {
+        'test_id': test_id,
+        'session_id': "session.session_id",
+        'token': "token",
+    })

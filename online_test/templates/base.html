@@ -1,0 +1,196 @@
+{% load static %}
+<!doctype html>
+<html class="no-js" lang="zxx">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>{% block title %}Isomo{% endblock %}</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="manifest" href="site.webmanifest">
+		<link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.ico">
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+		<!-- CSS here -->
+            <link href="{% static '/css/bootstrap.min.css' %}" rel="stylesheet">
+            <link href="{% static '/css/owl.carousel.min.css' %}" rel="stylesheet">
+            <link href="{% static '/css/flaticon.css' %}" rel="stylesheet">
+            <link href="{% static '/css/slicknav.css' %}" rel="stylesheet">
+            <link href="{% static '/css/animate.min.css' %}" rel="stylesheet">
+            <link href="{% static '/css/magnific-popup.css' %}" rel="stylesheet">
+            <link href="{% static '/css/fontawesome-all.min.css' %}" rel="stylesheet">
+            <link href="{% static '/css/themify-icons.css' %}" rel="stylesheet">
+            <link href="{% static '/css/slick.css' %}" rel="stylesheet">
+            <link href="{% static '/css/nice-select.css' %}" rel="stylesheet">
+            <link href="{% static '/css/style.css' %}" rel="stylesheet">
+            <style>
+
+#monitor-container {
+    display: grid;                   /* Use grid layout for monitor-container */  /* Two equal-width columns for layout */
+    gap: 20px;                        /* Adds space between items */
+    width: 100%;
+    height: 100vh;                    /* Full viewport height */
+    padding: 20px;
+}
+
+
+#video-container video {
+	position: relative;
+	float: left;
+	width: 50%;
+	cursor: pointer;
+}
+
+#video-container div {
+	float: left;
+	width: 50%;
+	position: relative;
+	margin-left: -50%;
+}
+
+#video-container p {
+	display: inline-block;
+	background: #f8f8f8;
+	padding-left: 5px;
+	padding-right: 5px;
+	color: #777777;
+	font-weight: bold;
+	border-bottom-right-radius: 4px;
+}
+
+video {
+	width: 100%;
+	height: auto;
+}
+          </style>
+   </head>
+
+   <body>
+       
+    <!-- Preloader Start -->
+    <div id="preloader-active">
+        <div class="preloader d-flex align-items-center justify-content-center">
+            <div class="preloader-inner position-relative">
+                <div class="preloader-circle"></div>
+                <div class="preloader-img pere-text">
+                   
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Preloader Start -->
+
+    <main>
+        <div class="section-top-border">
+            <div class="row">
+                <div class="col-lg-3 col-md-3">
+                    <!--Main Navigation-->
+                  <!-- Sidebar -->
+                  <nav id="sidebarMenu" class="collapse d-lg-block sidebar collapse bg-white" style="position: fixed;top: 0;bottom: 0;left: 0;padding: 58px 0 0; /* Height of navbar */box-shadow: 0 2px 5px 0 rgb(0 0 0 / 5%), 0 2px 10px 0 rgb(0 0 0 / 5%);width: 240px;z-index: 600;}">
+                    <div class="position-sticky">
+                      <div class="list-group list-group-flush mx-3 mt-4">
+                        <a href="#" class="list-group-item list-group-item-action py-2 ripple" aria-current="true">
+                          <i class="fas fa-tachometer-alt fa-fw me-3"></i><span>Main dashboard</span>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action py-2 ripple active">
+                          <i class="fas fa-chart-area fa-fw me-3"></i><span>Tests</span>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action py-2 ripple"><i
+                            class="fas fa-chart-line fa-fw me-3"></i><span>Change Password</span></a>
+                        <a href="#" class="list-group-item list-group-item-action py-2 ripple">
+                          <i class="fas fa-chart-pie fa-fw me-3"></i><span>Help</span>
+                        </a>
+                          <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+                      </div>
+                    </div>
+                  </nav>
+                  <!-- Sidebar -->
+                
+                  <!-- Navbar -->
+                  <nav id="main-navbar" class="navbar navbar-expand-lg navbar-light bg-white fixed-top">
+                    <!-- Container wrapper -->
+                    <div class="container-fluid">
+                      <!-- Toggle button -->
+                      <button data-mdb-button-init class="navbar-toggler" type="button" data-mdb-collapse-init data-mdb-target="#sidebarMenu"
+                        aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+                        <i class="fas fa-bars"></i>
+                      </button>
+                
+                      <!-- Brand -->
+                      <a class="navbar-brand" href="#">
+                        <img src="https://mdbcdn.b-cdn.net/img/logo/mdb-transaprent-noshadows.webp" height="25" alt="MDB Logo"
+                          loading="lazy" />
+                      </a>
+                      <!-- Search form -->
+                      <form class="d-none d-md-flex input-group w-auto my-auto">
+                        <input autocomplete="off" type="search" class="form-control rounded"
+                          placeholder='Search (ctrl + "/" to focus)' style="min-width: 225px;" />
+                        <span class="input-group-text border-0"><i class="fas fa-search"></i></span>
+                      </form>
+                
+                      <!-- Right links -->
+                      <ul class="navbar-nav ms-auto d-flex flex-row">
+                        <li class="nav-item dropdown">
+                          <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                          <a class="dropdown-item" href="#">{{ user.username }}</a>
+                        </li>
+                      </ul>
+                    </div>
+                    <!-- Container wrapper -->
+                  </nav>
+                  <!-- Navbar -->
+                
+                </div>
+                <div class="col-lg-8 col-md-8" style="margin-left: 20px; padding-left: 20px;">
+                  {% block content %}
+                  <!-- Content will be inserted here -->
+                  {% endblock %}
+              </div>
+              
+            </div>
+            
+        </div>
+    </main>
+   
+	<!-- JS here -->
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+		<!-- All JS Custom Plugins Link Here here -->
+        <script src="{% static '/js/vendor/modernizr-3.5.0.min.js' %}"></script>
+		<!-- Jquery, Popper, Bootstrap -->
+		<script src="{% static '/js/vendor/jquery-1.12.4.min.js' %}"></script>
+        <script src="{% static '/js/popper.min.js"></script' %}"></script>
+        <script src="{% static '/js/bootstrap.min.js' %}"></script>
+	    <!-- Jquery Mobile Menu -->
+        <script src="{% static '/js/jquery.slicknav.min.js' %}"></script>
+
+		<!-- Jquery Slick , Owl-Carousel Plugins -->
+        <script src="{% static 's/js/owl.carousel.min.js' %}"></script>
+        <script src="{% static '/js/slick.min.js' %}"></script>
+        <!-- Date Picker -->
+        <script src="{% static '/js/gijgo.min.js' %}"></script>
+		<!-- One Page, Animated-HeadLin -->
+        <script src="{% static '/js/wow.min.js' %}"></script>
+		<script src="{% static '/js/animated.headline.js' %}"></script>
+        <script src="{% static '/js/jquery.magnific-popup.js' %}"></script>
+
+		<!-- Scrollup, nice-select, sticky -->
+        <script src="{% static '/js/jquery.scrollUp.min.js' %}"></script>
+        <script src="{% static '/js/jquery.nice-select.min.js' %}"></script>
+		<script src="{% static '/js/jquery.sticky.js' %}"></script>
+        
+        <!-- contact js -->
+        <script src="{% static '/js/contact.js' %}"></script>
+        <script src="{% static '/js/jquery.form.js' %}"></script>
+        <script src="{% static '/js/jquery.validate.min.js' %}"></script>
+        <script src="{% static 's/js/mail-script.js' %}"></script>
+        <script src="{% static '/js/jquery.ajaxchimp.min.js' %}"></script>
+        
+		<!-- Jquery Plugins, main Jquery -->	
+        <script src="{% static '/js/plugins.js' %}"></script>
+        <script src="{% static '/js/main.js' %}"></script>
+        
+    </body>
+</html>

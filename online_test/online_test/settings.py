@@ -21,6 +21,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+AUTH_USER_MODEL = 'users.User'
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -62,6 +64,7 @@ INSTALLED_APPS = [
     'stream',
     'videos',
     'corsheaders',
+    'crispy_forms',
 ]
 
 MIDDLEWARE = [
@@ -80,7 +83,9 @@ ROOT_URLCONF = 'online_test.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),  # Path to the root-level templates folder
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -93,6 +98,8 @@ TEMPLATES = [
     },
 ]
 
+
+
 WSGI_APPLICATION = 'online_test.wsgi.application'
 
 
@@ -102,7 +109,7 @@ WSGI_APPLICATION = 'online_test.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': BASE_DIR / 'db_2.sqlite3',
     }
 }
 
@@ -198,4 +205,6 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
 }
+
+CRISPY_TEMPLATE_PACK = 'bootstrap5' 
 

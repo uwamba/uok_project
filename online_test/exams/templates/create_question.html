@@ -1,0 +1,84 @@
+{% extends 'base_admin.html' %}
+
+{% block title %}User Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Create a New Question</h2>
+    <!-- create-question.html -->
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    
+    <!-- Question Formset -->
+    <div id="question-formset">
+        {{ question_formset.management_form }}
+        
+        {% for form in question_formset %}
+            <div class="question-form">
+                {{ form.as_p }}
+                <!-- Button to add options for this question -->
+                <button type="button" class="add-option-btn">Add Option</button>
+                <div class="options-container">
+                    <!-- Dynamically added options will go here -->
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <button type="button" id="add-question-btn" class="btn btn-outline-primary">Add Question</button>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+
+</div>
+<script>
+    // Wait for the DOM to fully load before attaching event listeners
+    window.addEventListener('DOMContentLoaded', function () {
+        let optionIndex = {{ option_formset.total_form_count }};
+        const addOptionBtn = document.getElementById('add-option-btn');
+        const optionFormset = document.getElementById('option-formset');
+
+        // Check if the button exists
+        if (addOptionBtn) {
+            addOptionBtn.addEventListener('click', () => {
+                alert('Adding new option form');
+                
+                // Clone the first form (option)
+                const form = optionFormset.children[0]; // Get the first option form
+                const newForm = form.cloneNode(true); // Clone it
+                
+                // Update form field names and IDs with the new index
+                newForm.querySelectorAll('input, label').forEach((element) => {
+                    if (element.name) {
+                        element.name = element.name.replace(/\d+/, optionIndex); // Update the name attribute with the new index
+                    }
+                    if (element.id) {
+                        element.id = element.id.replace(/\d+/, optionIndex); // Update the id attribute with the new index
+                    }
+                    // Reset input fields
+                    if (element.type === 'text' || element.type === 'checkbox') {
+                        element.value = ''; // Clear any pre-filled values
+                    }
+                });
+
+                // Append the newly created form to the formset
+                optionFormset.appendChild(newForm);
+                
+                // Increment the formset index and update the management form count
+                const totalForms = document.getElementById('id_option_form-TOTAL_FORMS');
+                //totalForms.value = parseInt(totalForms.value) + 1;
+
+                // Update the option index
+                optionIndex++;
+            });
+        } else {
+            console.error('Add Option button not found!');
+        }
+    });
+</script>
+
+
+{% endblock %}
+
+

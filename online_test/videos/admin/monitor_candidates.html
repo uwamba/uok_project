@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Candidate</title>
+    <script src="https://unpkg.com/@openvidu/openvidu-browser@latest"></script>
+</head>
+<body>
+    <h1>Monitoring Candidate: {{ test_id }}</h1>
+    <div id="video-container"></div>
+
+    <script>
+        const OV = new OpenVidu();
+        const session = OV.initSession();
+
+        session.on('streamCreated', (event) => {
+            session.subscribe(event.stream, 'video-container');
+        });
+
+        session.connect('{{ token }}')
+            .then(() => {
+                console.log("Connected to session");
+            })
+            .catch((error) => {
+                console.error("There was an error connecting to the session:", error);
+            });
+    </script>
+</body>
+</html>

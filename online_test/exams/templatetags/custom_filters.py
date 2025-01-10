@@ -11,3 +11,7 @@ def dict_item(dictionary, key):
     selected_option_ids = [detail.selected_option_id for detail in dictionary if detail.question_id == key]
     return selected_option_ids
 
+
+@register.filter(name='add_class')
+def add_class(value, arg):
+    return value.as_widget(attrs={'class': arg})

@@ -1,6 +1,5 @@
 
-
-    {% extends 'partial/base.html' %}
+    {% extends 'base.html' %}
 
     {% block title %}User Dashboard{% endblock %}
     
@@ -56,7 +55,12 @@
   
     {% endfor %}
     <button type="submit" class="genric-btn primary">Submit</button>
-</form>
+  </form>
+
+  <!-- open vidu test code -->
+  
+   
+</div>
         </div>
     
         <!-- Modal -->
@@ -78,9 +82,11 @@
             </div>
         </div>
     
-    
-    
+        <div id="video-container"></div>
     </div> 
+    
+    {% load static %}
+    <script src="{% static '/js/openvidu-browser-2.23.0.js' %}"></script>
     <script>
         // Get the remaining time from the context
         let remainingTime = {{ remaining_time }};
@@ -124,6 +130,197 @@
             });
         });
     });
+        //const videoElement = document.getElementById('videoElement');
+        var user=generateRandomString(10);
+        const sessionId='MYSESSIONID000000000000000020'
+        console.log('generated username', user);
+    
+        // Access the user's webcam
+       
+
+
+const OV = new OpenVidu();
+const session = OV.initSession();
+console.log('-------------------------------- create toksession---------------------')
+createSession(sessionId).then(response => {
+    const sessionId = response; 
+    console.log('response session Id:', sessionId); 
+    console.log('-------------------------------- create session---------------------')
+createToken(sessionId,user).then(response => {
+		const token = response.token; // Extract the token string
+		console.log('Extracted Token:', token); 
+        //subscribe to stream
+
+        session.on('streamCreated', (event) => {
+            console.log('stream created hereeeeeeeeeeee:');
+            const subscriber = session.subscribe(event.stream, undefined);
+            subscriber.on('videoElementCreated', (videoEvent) => {
+                addVideoToGrid(videoEvent.element);
+                console.log('stream subscribbed hereeeeeeeeeeee:');
+            });
+        });
+
+        // Handle participant leaving
+        session.on('streamDestroyed', (event) => {
+            const videoContainer = document.getElementById('video-container');
+            const videoElement = document.querySelector(`video[src="${event.stream.streamId}"]`);
+            if (videoElement) videoContainer.removeChild(videoElement);
+        });
+
+    // Connect to the session
+    session.connect(token, { clientData: user })
+        .then(() => {
+            // After connecting, publish your video stream
+           
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then((stream) => {
+                    console.log('Permissions granted');
+                    
+                    const publisher = OV.initPublisher('video-container', {
+                        videoSource: undefined,  // Default webcam
+                        audioSource: undefined,  // Default microphone
+                        publishAudio: true,      // Publish audio (set to false to mute)
+                        publishVideo: true,      // Publish video (set to false to hide video)
+                        resolution: '640x480',   // Set video resolution
+                        frameRate: 30,           // Set frame rate
+                        mirror: false            // Disable mirror effect (useful for screen sharing)
+                    });
+                    
+                    session.publish(publisher);
+                    console.log(' session published');
+                    publisher.on('videoElementCreated', (event) => {
+                    console.error('event element', event.element);
+                    addVideoToGrid(event.element);
+            });
+                })
+                .catch((error) => {
+                    console.error('Permissions denied:', error);
+                });
+           
+        })
+        .catch((error) => {
+            console.error('Error connecting to the session:', error);
+        });
+
+
+    });
+    
+});
+
+
+const SESSION_URL = 'http://localhost:4443/api/sessions';
+
+async function createSession(sessionId) {
+	console.log('SESSION ID IS:', sessionId);
+	const csrftoken = getCSRFToken();
+    try {
+		const response = await fetch(`http://127.0.0.1:8000/video/create_session/`, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Basic ' + btoa('OPENVIDUAPP:my_secret'),  // Replace with your actual OpenVidu secret
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrftoken,  // Include CSRF token if required by your backend
+            },
+            body: JSON.stringify({ customSessionId: sessionId }),
+
+		});
+        console.log('response at front end from crearing session',response );
+        if (!response.ok) {
+
+			if (response.status === 409) {
+				// Session already exists
+				const sessionData = await response.json();
+				console.log('Session already exists:', sessionData.customSessionId);
+				return sessionData.customSessionId;
+				
+			} else {
+				// Other errors
+				const errorDetails = await response.json().catch(() => null); // Handle cases where response isn't JSON
+				throw new Error(
+					`HTTP Error: ${response.status} ${response.statusText}\n` +
+					`Details: ${JSON.stringify(errorDetails)}`
+				);
+			}
+
+            // Parse error details if possible
+            
+        }else{
+            const sessionData = await response.json();
+			console.log('Session Created:', sessionData);
+			return sessionData.sessionId;  
+        }
+
+    } catch (error) {
+        console.error('Error creating session:', error.message || error);
+    }
+}
+async function createToken(sessionId,username) {
+
+    const csrftoken = getCSRFToken();  // Assuming you're using CSRF token protection, replace this if necessary
+
+    console.log('Requesting token for sessionId:', sessionId);
+
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/video/generate_token/${sessionId}/`, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Basic ' + btoa('OPENVIDUAPP:my_secret'),  // Replace with your actual OpenVidu secret
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrftoken,  // Include CSRF token if required by your backend
+            },
+            body: JSON.stringify({ username: username, customSessionId: sessionId }), // Send the participant's username in the body
+        });
+
+        if (!response.ok) {
+            throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const data = await response.json();  // Parse the JSON response
+        return data;  // Return the response data (token)
+    } catch (error) {
+        console.error('Error occurred while fetching token:', error);
+        throw error;  // Throw error for further handling if needed
+    }
+}
+
+
+
+function getCSRFToken() {
+	const name = 'csrftoken';
+	const cookies = document.cookie.split(';');
+	for (let cookie of cookies) {
+		const [key, value] = cookie.trim().split('=');
+		if (key === name) {
+			return decodeURIComponent(value);
+		}
+	}
+	return null;
+}
+
+function generateRandomString(length) {
+    return Math.random().toString(36).substring(2, 2 + length);
+}
+function addVideoToGrid(videoElement) {
+    const videoContainer = document.getElementById('video-container');
+    videoContainer.appendChild(videoElement);
+}
+
+function addVideoToGrid(videoElement) {
+    const videoContainer = document.getElementById('video-container');
+    videoContainer.appendChild(videoElement);
+    updateGridLayout();
+}
+
+        // Function to update the grid layout dynamically
+function updateGridLayout() {
+    const videoContainer = document.getElementById('video-container');
+    const videos = videoContainer.children.length;
+    videoContainer.style.gridTemplateColumns = `repeat(${Math.ceil(Math.sqrt(videos))}, 1fr)`;
+}
+
+
+
+
     </script>
     {% endblock %}
     

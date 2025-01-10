@@ -1,0 +1,105 @@
+{% extends 'base_admin.html' %}
+
+{% block title %}User Dashboard{% endblock %}
+
+{% block content %}
+{% load custom_filters %}
+<!-- Include Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<!-- Include Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 for candidates field
+        $('#id_candidates').select2({
+            placeholder: "Select candidates",
+            allowClear: true
+        });
+    });
+</script>
+<div class="container mt-5">
+<form method="POST">
+    {% csrf_token %}
+    
+    <!-- Row 1: Title and Subject -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+            {{ form.title|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="{{ form.subject.id_for_label }}" class="form-label">Subject</label>
+            {{ form.subject|add_class:"form-control" }}
+        </div>
+    </div>
+
+    <!-- Row 2: Start Time and End Time -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="{{ form.start_time.id_for_label }}" class="form-label">Start Time</label>
+            {{ form.start_time|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="{{ form.end_time.id_for_label }}" class="form-label">End Time</label>
+            {{ form.end_time|add_class:"form-control" }}
+        </div>
+    </div>
+
+    <!-- Row 3: Total Marks and Max Attempts -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="{{ form.total_marks.id_for_label }}" class="form-label">Total Marks</label>
+            {{ form.total_marks|add_class:"form-control" }}
+        </div>
+        <div class="col-md-6">
+            <label for="{{ form.max_attempts.id_for_label }}" class="form-label">Max Attempts</label>
+            {{ form.max_attempts|add_class:"form-control" }}
+        </div>
+    </div>
+
+    <!-- Row 4: Candidates and Duration -->
+    <div class="row mb-3">
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <label for="{{ form.candidates.id_for_label }}" class="form-label">Candidates</label>
+                <div class="form-check-group">
+                    {% for checkbox in form.candidates %}
+                        <div class="form-check">
+                            {{ checkbox.tag }}  <!-- Renders the checkbox input -->
+                            <label class="form-check-label" for="{{ checkbox.id_for_label }}">
+                                {{ checkbox.choice_label }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="{{ form.duration.id_for_label }}" class="form-label">Duration</label>
+            {{ form.duration|add_class:"form-control" }}
+        </div>
+    </div>
+
+    <!-- Row 5: Counter Type -->{{ user.username }}
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="{{ form.counterType.id_for_label }}" class="form-label">Counter Type</label>
+            {{ form.counterType|add_class:"form-control" }}
+        </div>
+    </div>
+
+
+
+    <!-- Submit Button -->
+    <div class="form-group text-center mt-4">
+        <button type="submit" class="btn btn-primary">Create Test</button>
+    </div>
+</form>
+</div>
+
+{% endblock %}
+
+

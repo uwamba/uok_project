@@ -1,7 +1,7 @@
 from django.db import models
 from companies.models import Company 
 from django.utils.translation import gettext_lazy as _
-
+from django.conf import settings
 from users.models import Candidate
 
 
@@ -34,10 +34,15 @@ class Test(models.Model):
         choices=DURATION_TYPE_CHOICES,
         default=TEST_DURATION,
     )
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     
 
     def __str__(self):
         return self.title
+    def save(self, *args, **kwargs):
+        if not self.created_by:  # Set created_by if it's not already set
+            self.created_by = kwargs.get('user', None)  # This assumes you pass the user when saving
+        super().save(*args, **kwargs)
     
 class Question(models.Model):
     SINGLE_ANSWER = 'single'

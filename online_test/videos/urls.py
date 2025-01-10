@@ -17,6 +17,7 @@ urlpatterns = [
     path('video_conf/', views.video_conf, name='video_conf'),
     path('testing/', views.testing, name='testing'),
     path('', TemplateView.as_view(template_name='index.html')),
+    
 
 
 ]

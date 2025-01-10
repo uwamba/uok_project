@@ -1,0 +1,327 @@
+
+    {% extends 'base.html' %}
+
+    {% block title %}User Dashboard{% endblock %}
+    
+    {% block content %}
+    <div class="section-top-border">
+        <h3 class="mb-30">Test Count and details will be here</h3>
+        <p><strong>Time Remaining:</strong> <span id="timer"></span></p>
+        <div class="container mt-4">
+            <h2>{{ test.name }}</h2>
+<form method="post" id="test">
+    {% csrf_token %}
+    {% for question in questions %}
+    <div class="mb-4">
+        <h5>{{ question.text }}</h5>
+        <h5>Type: {{ question.question_type }}</h5>
+        {% if question.question_type == "multiple" %}
+            <!-- Checkbox for multiple answers -->
+            <div>
+                {% for option in question.options.all %}
+                    <div class="form-check">
+                        <input class="form-check-input multiple-choice" 
+                        type="checkbox" name="{{ question.id }}" 
+                        id="option_{{ option.id }}" 
+                        data-question-id="{{ question.id }}" 
+                        data-max-selection="{{ question.max_selection }}"
+                        value="{{ option.id }}" id="option_{{ option.id }}">
+                        
+                        <label class="form-check-label" for="{{ option.id }}">
+                            {{ option.text }}
+                        </label>
+                    </div>
+                {% endfor %}
+            </div>
+        {% elif question.question_type == "single" %}
+            <!-- Radio button for single answer -->
+            <div>
+                {% for option in question.options.all %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="{{ question.id }}" value="{{ option.id }}" id="option_{{ option.id }}">
+                        <label class="form-check-label" for="{{ option.id }}">
+                            {{ option.text }}
+                        </label>
+                    </div>
+                {% endfor %}
+            </div>
+        {% elif question.question_type == "text" %}
+            <!-- Text box for text answer -->
+            <div class="form-group">
+                <textarea class="form-control" name="{{ question.id }}" rows="3" placeholder="Enter your answer here..."></textarea>
+            </div>
+        {% endif %}
+    </div>
+  
+    {% endfor %}
+    <button type="submit" class="genric-btn primary">Submit</button>
+  </form>
+
+  <!-- open vidu test code -->
+  
+   
+</div>
+        </div>
+    
+        <!-- Modal -->
+        <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>By clicking "View Details", you agree to the test terms and conditions. Please ensure you adhere to all guidelines provided by the company.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <a href="#" class="btn btn-primary" id="agreeButton">Agree</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="monitor-container" class="monitor-container">
+            <div id="video-container" class="video-container">
+            </div>
+        </div>
+        
+    </div> 
+    
+    {% load static %}
+    <script src="{% static '/js/openvidu-browser-2.23.0.js' %}"></script>
+    <script>
+        // Get the remaining time from the context
+        let remainingTime = {{ remaining_time }};
+    
+        // Update the timer every second
+        const timerElement = document.getElementById('timer');
+        const form = document.getElementById('test');
+        const interval = setInterval(() => {
+            let minutes = Math.floor(remainingTime / 60);
+            let seconds = remainingTime % 60;
+    
+            // Format the timer display
+            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+    
+            if (remainingTime <= 0) {
+                clearInterval(interval);
+                alert('Time is up! Submitting the test...');
+                form.submit(); // Automatically submit the form
+            }
+    
+            remainingTime--;
+        }, 1000);
+
+         // Validate multiple-choice question max selection
+    document.addEventListener('DOMContentLoaded', () => {
+        const checkboxes = document.querySelectorAll('.multiple-choice');
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const questionId = e.target.getAttribute('data-question-id');
+                const maxSelections = parseInt(e.target.getAttribute('data-max-selection'), 10);
+
+                const selected = document.querySelectorAll(
+                    `.multiple-choice[data-question-id="${questionId}"]:checked`
+                );
+
+                if (selected.length > maxSelections) {
+                    alert(`You can only select up to ${maxSelections} options for this question.`);
+                    e.target.checked = false;
+                }
+            });
+        });
+    });
+        //const videoElement = document.getElementById('videoElement');
+        var user=generateRandomString(10);
+        const sessionId='MYSESSIONID000000000000000020'
+        console.log('generated username', user);
+    
+        // Access the user's webcam
+       
+
+
+const OV = new OpenVidu();
+const session = OV.initSession();
+createSession(sessionId).then(response => {
+    const sessionId = response; 
+    console.log('response session Id:', sessionId); 
+    console.log('-------------------------------- create token---------------------')
+createToken(sessionId,user).then(response => {
+		const token = response.token; // Extract the token string
+		console.log('Extracted Token:', token); 
+        //subscribe to stream
+
+    session.on('streamCreated', (event) => {
+        console.log('Stream created: ', event.stream);
+        
+        // Subscribe to the stream
+        //const subscriber = session.subscribe(event.stream, undefined);
+
+
+        const subscriber = session.subscribe(event.stream, 'video-container');
+
+        // Handle the creation of the video element
+        subscriber.on('videoElementCreated', event => {
+            console.log('Video appended to DOM:', event);
+
+            var dataNode = document.createElement('div');
+            const parsedData = JSON.parse(event.target.stream.connection.data);
+            const clientData = parsedData.clientData;
+            var userData=clientData;
+	        var nodeId=clientData;
+            
+            dataNode.className = "video-name";
+            dataNode.id = "data-" + nodeId;
+            dataNode.innerHTML = "<p>" + userData + "</p>";
+            event.element.parentNode.insertBefore(dataNode, event.element.nextSibling);
+            
+            
+        });
+                // Manually create a video element and attach the media stream
+        
+        
+        // Add the video element to the DOM after subscription
+        subscriber.on('streamPlaying', () => {
+            console.log('Stream is now playing!');
+            
+        });
+});
+
+
+        // Handle participant leaving
+        session.on('streamDestroyed', (event) => {
+            const videoContainer = document.getElementById('video-container');
+            const videoElement = document.querySelector(`video[src="${event.stream.streamId}"]`);
+            if (videoElement) videoContainer.removeChild(videoElement);
+        });
+
+    // Connect to the session
+    session.connect(token)
+        .catch((error) => {
+            console.error('Error connecting to the session:', error);
+        });
+    });
+    
+});
+
+
+const SESSION_URL = 'http://localhost:4443/api/sessions';
+
+async function createSession(sessionId) {
+	console.log('SESSION ID IS:', sessionId);
+	const csrftoken = getCSRFToken();
+    try {
+		const response = await fetch(`http://127.0.0.1:8000/video/create_session/`, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Basic ' + btoa('OPENVIDUAPP:my_secret'),  // Replace with your actual OpenVidu secret
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrftoken,  // Include CSRF token if required by your backend
+            },
+            body: JSON.stringify({ customSessionId: sessionId }),
+
+		});
+        console.log('response at front end from crearing session',response );
+        if (!response.ok) {
+
+			if (response.status === 409) {
+				// Session already exists
+				const sessionData = await response.json();
+				console.log('Session already exists:', sessionData.customSessionId);
+				return sessionData.customSessionId;
+				
+			} else {
+				// Other errors
+				const errorDetails = await response.json().catch(() => null); // Handle cases where response isn't JSON
+				throw new Error(
+					`HTTP Error: ${response.status} ${response.statusText}\n` +
+					`Details: ${JSON.stringify(errorDetails)}`
+				);
+			}
+
+            // Parse error details if possible
+            
+        }else{
+            const sessionData = await response.json();
+			console.log('Session Created:', sessionData);
+			return sessionData.sessionId;  
+        }
+
+    } catch (error) {
+        console.error('Error creating session:', error.message || error);
+    }
+}
+async function createToken(sessionId,username) {
+
+    const csrftoken = getCSRFToken();  // Assuming you're using CSRF token protection, replace this if necessary
+
+    console.log('Requesting token for sessionId:', sessionId);
+
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/video/generate_token/${sessionId}/`, {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Basic ' + btoa('OPENVIDUAPP:my_secret'),  // Replace with your actual OpenVidu secret
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrftoken,  // Include CSRF token if required by your backend
+            },
+            body: JSON.stringify({ username: username, customSessionId: sessionId }), // Send the participant's username in the body
+        });
+
+        if (!response.ok) {
+            throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const data = await response.json();  // Parse the JSON response
+        return data;  // Return the response data (token)
+    } catch (error) {
+        console.error('Error occurred while fetching token:', error);
+        throw error;  // Throw error for further handling if needed
+    }
+}
+
+
+
+function getCSRFToken() {
+	const name = 'csrftoken';
+	const cookies = document.cookie.split(';');
+	for (let cookie of cookies) {
+		const [key, value] = cookie.trim().split('=');
+		if (key === name) {
+			return decodeURIComponent(value);
+		}
+	}
+	return null;
+}
+
+function generateRandomString(length) {
+    return Math.random().toString(36).substring(2, 2 + length);
+}
+function addVideoToGrid(videoElement) {
+    const videoContainer = document.getElementById('video-container');
+    videoContainer.appendChild(videoElement);
+}
+
+function addVideoToGrid(videoElement) {
+    const videoContainer = document.getElementById('video-container');
+    videoContainer.appendChild(videoElement);
+    updateGridLayout();
+}
+
+        // Function to update the grid layout dynamically
+function updateGridLayout() {
+    const videoContainer = document.getElementById('video-container');
+    const videos = videoContainer.children.length;
+    videoContainer.style.gridTemplateColumns = `repeat(${Math.ceil(Math.sqrt(videos))}, 1fr)`;
+}
+
+
+
+
+    </script>
+    {% endblock %}
+    
+    
+    
