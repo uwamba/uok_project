@@ -1,5 +1,5 @@
 
-    {% extends 'base.html' %}
+    {% extends 'base_admin.html' %}
 
     {% block title %}User Dashboard{% endblock %}
     
@@ -8,85 +8,44 @@
         <h3 class="mb-30">Test Count and details will be here</h3>
         <p><strong>Time Remaining:</strong> <span id="timer"></span></p>
         <div class="container mt-4">
-            <h2>{{ test.name }}</h2>
-<form method="post" id="test">
-    {% csrf_token %}
-    {% for question in questions %}
-    <div class="mb-4">
-        <h5>{{ question.text }}</h5>
-        <h5>Type: {{ question.question_type }}</h5>
-        {% if question.question_type == "multiple" %}
-            <!-- Checkbox for multiple answers -->
-            <div>
-                {% for option in question.options.all %}
-                    <div class="form-check">
-                        <input class="form-check-input multiple-choice" 
-                        type="checkbox" name="{{ question.id }}" 
-                        id="option_{{ option.id }}" 
-                        data-question-id="{{ question.id }}" 
-                        data-max-selection="{{ question.max_selection }}"
-                        value="{{ option.id }}" id="option_{{ option.id }}">
-                        
-                        <label class="form-check-label" for="{{ option.id }}">
-                            {{ option.text }}
-                        </label>
-                    </div>
+            <h2>{{ test.title }}</h2>
+            <h2>Tests and Candidates</h2>
+            <h2>Candidates:</h2>
+            <ul>
+                {% for candidate in candidates %}
+                    <li>{{ candidate.user.username }} - {{ candidate.user.email }}</li>
+                {% empty %}
+                    <li>No candidates have registered for this test.</li>
                 {% endfor %}
-            </div>
-        {% elif question.question_type == "single" %}
-            <!-- Radio button for single answer -->
-            <div>
-                {% for option in question.options.all %}
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="{{ question.id }}" value="{{ option.id }}" id="option_{{ option.id }}">
-                        <label class="form-check-label" for="{{ option.id }}">
-                            {{ option.text }}
-                        </label>
-                    </div>
-                {% endfor %}
-            </div>
-        {% elif question.question_type == "text" %}
-            <!-- Text box for text answer -->
-            <div class="form-group">
-                <textarea class="form-control" name="{{ question.id }}" rows="3" placeholder="Enter your answer here..."></textarea>
-            </div>
-        {% endif %}
-    </div>
-  
-    {% endfor %}
-    <button type="submit" class="genric-btn primary">Submit</button>
-  </form>
-
-  <!-- open vidu test code -->
-  
-   
-</div>
+            </ul>
         </div>
-    
         <!-- Modal -->
-        <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p>By clicking "View Details", you agree to the test terms and conditions. Please ensure you adhere to all guidelines provided by the company.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <a href="#" class="btn btn-primary" id="agreeButton">Agree</a>
-                    </div>
-                </div>
-            </div>
-        </div>
         <div id="monitor-container" class="monitor-container">
             <div id="video-container" class="video-container">
             </div>
         </div>
         
     </div> 
+
+    <!-- Floating Chat Container -->
+<div id="chat-container">
+    <div id="chat-header">
+        <h4>Chat with us</h4>
+        <button id="close-chat" onclick="toggleChat()">X</button>
+    </div>
+    <div id="chat-body">
+        <!-- Chat messages will appear here -->
+        <div id="chat-messages"></div>
+    </div>
+    <div id="chat-input">
+        <input type="text" id="message-input" placeholder="Type your message..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<!-- Button to open the chat -->
+<button id="open-chat" onclick="toggleChat()">Chat</button>
+
     
     {% load static %}
     <script src="{% static '/js/openvidu-browser-2.23.0.js' %}"></script>
@@ -176,6 +135,13 @@ createToken(sessionId,user).then(response => {
             dataNode.id = "data-" + nodeId;
             dataNode.innerHTML = "<p>" + userData + "</p>";
             event.element.parentNode.insertBefore(dataNode, event.element.nextSibling);
+
+           //capturing frame for analysi
+            const videoId = clientData;  // Unique ID for each stream
+            setInterval(() => {
+             captureFrame(event.element, videoId);
+            }, 10000); // 10,000 milliseconds = 10 seconds
+            
             
             
         });
@@ -196,7 +162,38 @@ createToken(sessionId,user).then(response => {
             const videoElement = document.querySelector(`video[src="${event.stream.streamId}"]`);
             if (videoElement) videoContainer.removeChild(videoElement);
         });
+        
+        session.signal({
+            data: 'My custom message',  // Any string (optional)
+            to: [],                     // Array of Connection objects (optional. Broadcast to everyone if empty)
+            type: 'my-chat'             // The type of message (optional)
+            })
+            .then(() => {
+                console.log('Message successfully sent');
+            })
+            .catch(error => {
+                console.error(error);
+            });
+            session.on('signal', (event) => {
+                console.log(event.data); // Message
+                console.log(event.from); // Connection object of the sender
+                console.log(event.type); // The type of message
+            });
+            // Sender of the adressed message (after calling 'session.connect')
 
+    session.on('signal:chat', event => {
+        const message = event.data;
+        const chatMessages = document.getElementById('chat-messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.textContent = message;
+        messageDiv.style.padding = '8px';
+        messageDiv.style.marginBottom = '8px';
+        messageDiv.style.backgroundColor = '#e0e0e0';
+        messageDiv.style.borderRadius = '5px';
+        chatMessages.appendChild(messageDiv);
+       
+        console.log("chat started hererrrrrrrrrrrr")
+      });
     // Connect to the session
     session.connect(token)
         .catch((error) => {
@@ -317,10 +314,92 @@ function updateGridLayout() {
     videoContainer.style.gridTemplateColumns = `repeat(${Math.ceil(Math.sqrt(videos))}, 1fr)`;
 }
 
+function captureFrame(videoElement,videoId) {
+    // Create a canvas to capture the video frame
+    console.log('videoElement',videoElement);
+    const canvas = document.createElement('canvas');
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+    // Convert the frame to base64
+    const frameData = canvas.toDataURL('image/jpeg');
+    console.log('frame datata front end',frameData);
+    
+    // Send the frame to Django for analysis
+    sendFrameToServer(frameData, videoId);
+}
+async function sendFrameToServer(frameData, videoId) {
+    const csrftoken = getCSRFToken();  
+    const response = await fetch(`http://127.0.0.1:8000/video/process_frame/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrftoken,  // Include CSRF token if required by your backend
+            },
+            body: JSON.stringify({ frame: frameData, videoId: videoId }),// Send the participant's username in the body
+        });
+        //console.log(response);
+}
 
 
 
-    </script>
+   
+
+function toggleChat() {
+    const chatContainer = document.getElementById('chat-container');
+    const openChatButton = document.getElementById('open-chat');
+    
+    if (chatContainer.style.display === 'none' || chatContainer.style.display === '') {
+        chatContainer.style.display = 'flex';
+        openChatButton.style.display = 'none'; // Hide open button when chat is open
+    } else {
+        chatContainer.style.display = 'none';
+        openChatButton.style.display = 'block'; // Show open button when chat is closed
+    }
+}
+
+// Send message and add it to the chat
+function sendMessage() {
+    const messageInput = document.getElementById('message-input');
+    const chatMessages = document.getElementById('chat-messages');
+    
+    const messageText = messageInput.value.trim();
+
+    if (messageText) {
+        console.log('sart sending');
+        console.log(session)
+        console.log('sart sending');
+        // Display the message locally
+        const messageDiv = document.createElement('div');
+        messageDiv.textContent = messageText;
+        messageDiv.style.padding = '8px';
+        messageDiv.style.marginBottom = '8px';
+        messageDiv.style.backgroundColor = '#e0e0e0';
+        messageDiv.style.borderRadius = '5px';
+        chatMessages.appendChild(messageDiv);
+
+        // Ensure session is connected before sending signal
+        if (session) {
+            console.error('Session sending chat message:');
+            session.signal({
+                type: 'chat',
+                data: messageText,
+            }).catch(error => {
+                console.error('Error sending chat message:', error);
+            });
+        } else {
+            console.warn('Session is not connected. Cannot send message.');
+        }
+
+        // Clear input field and scroll to bottom
+        messageInput.value = '';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+</script>
     {% endblock %}
     
     

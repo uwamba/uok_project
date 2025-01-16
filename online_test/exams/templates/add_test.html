@@ -1,0 +1,155 @@
+{% extends "base_admin.html" %}
+{% block content %}
+
+<h1>Add New Test, Questions, and Options</h1>
+
+<form method="post">
+    {% csrf_token %}
+
+    <!-- Test Details -->
+    <h2>Test Details</h2>
+    <label>Title:</label>
+    <input type="text" name="test_title" required><br>
+
+    <label>Subject:</label>
+    <select name="subject" required>
+        {% for subject in subjects %}
+        <option value="{{ subject.id }}">{{ subject.name }}</option>
+        {% endfor %}
+    </select><br>
+
+    <label>Start Time:</label>
+    <input type="datetime-local" name="start_time" required><br>
+
+    <label>End Time:</label>
+    <input type="datetime-local" name="end_time" required><br>
+
+    <label>Total Marks:</label>
+    <input type="number" name="total_marks" required><br>
+
+    <label>Max Attempts:</label>
+    <input type="number" name="max_attempts" required><br>
+
+    <label>Duration (in minutes):</label>
+    <input type="number" name="duration" required><br>
+
+    <label>Candidates:</label><br>
+    <div class="candidate-container">
+        <input type="text" id="candidateSearch" placeholder="Search Candidates..." onkeyup="filterCandidates()">
+        <div class="scrollable-container" id="candidateList">
+            {% for candidate in candidates %}
+            <div class="candidate-item">
+                <input type="checkbox" name="candidates" value="{{ candidate.id }}">
+                <label>{{ candidate.full_name }}</label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Questions Section -->
+    <h2>Questions</h2>
+    <div id="questions-container"></div>
+    <button type="button" onclick="addQuestion()">Add Question</button>
+
+    <button type="submit">Save Test</button>
+</form>
+<script>
+    function filterCandidates() {
+        var input, filter, container, items, labels, i, txtValue;
+        input = document.getElementById('candidateSearch');
+        filter = input.value.toUpperCase();
+        container = document.getElementById('candidateList');
+        items = container.getElementsByClassName('candidate-item');
+
+        for (i = 0; i < items.length; i++) {
+            labels = items[i].getElementsByTagName('label');
+            if (labels.length > 0) {
+                txtValue = labels[0].textContent || labels[0].innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    items[i].style.display = "";
+                } else {
+                    items[i].style.display = "none";
+                }
+            }
+        }
+    }
+</script>
+<script>
+    
+   let questionCount = 0;
+
+function addQuestion() {
+    const questionsContainer = document.getElementById('questions-container');
+
+    const questionHTML = `
+        <div class="question-block" id="question-${questionCount}">
+            <h3>Question ${questionCount + 1}</h3>
+            <label>Text:</label>
+            <input type="text" name="question_text" required><br>
+
+            <label>Marks:</label>
+            <input type="number" name="question_marks" required><br>
+
+            <label>Type:</label>
+            <select name="question_type" onchange="handleQuestionTypeChange(${questionCount}, this.value)" required>
+                <option value="single">Single Answer</option>
+                <option value="multiple">Multiple Answers</option>
+                <option value="text">Text Answer</option>
+            </select><br>
+
+            <!-- Options Section -->
+            <div id="options-section-${questionCount}">
+                <h4>Options</h4>
+                <div id="options-container-${questionCount}"></div>
+                <button type="button" onclick="addOption(${questionCount})">Add Option</button>
+            </div>
+
+            <!-- Answer Text Section (hidden by default) -->
+            <div id="answer-text-section-${questionCount}" style="display: none;">
+                <label>Answer Text:</label>
+                <input type="text" name="answer_text_${questionCount}"><br>
+            </div>
+
+            <hr>
+        </div>
+    `;
+
+    questionsContainer.insertAdjacentHTML('beforeend', questionHTML);
+    questionCount++;
+}
+
+function addOption(questionIndex) {
+    const optionsContainer = document.getElementById(`options-container-${questionIndex}`);
+
+    const optionHTML = `
+        <div class="option-block">
+            <label>Option Text:</label>
+            <input type="text" name="option_text_${questionIndex}" required>
+            <label>Correct:</label>
+            <input type="checkbox" name="is_correct_${questionIndex}" value="${optionsContainer.children.length}">
+            <br>
+        </div>
+    `;
+
+    optionsContainer.insertAdjacentHTML('beforeend', optionHTML);
+}
+
+function handleQuestionTypeChange(questionIndex, questionType) {
+    const optionsSection = document.getElementById(`options-section-${questionIndex}`);
+    const answerTextSection = document.getElementById(`answer-text-section-${questionIndex}`);
+
+    if (questionType === 'text') {
+        // Show the Answer Text field and hide options
+        optionsSection.style.display = 'none';
+        answerTextSection.style.display = 'block';
+    } else {
+        // Show options and hide the Answer Text field
+        optionsSection.style.display = 'block';
+        answerTextSection.style.display = 'none';
+    }
+}
+
+</script>
+
+{% endblock %}
+

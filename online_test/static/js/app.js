@@ -302,20 +302,5 @@ function getCSRFToken() {
 	return null;
 }
 
-async function getAllSessions() {
-    const response = await fetch(`${OPENVIDU_URL}/openvidu/api/sessions`, {
-        method: 'GET',
-        headers: {
-            'Authorization': 'Basic ' + btoa('OPENVIDUAPP:' + OPENVIDU_SECRET),
-            'Content-Type': 'application/json'
-        }
-    });
 
-    if (response.ok) {
-        const sessions = await response.json();
-        console.log('Active sessions:', sessions.content);
-    } else {
-        console.error('Failed to fetch sessions:', response.status, response.statusText);
-    }
-}
 

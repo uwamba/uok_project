@@ -65,6 +65,9 @@ INSTALLED_APPS = [
     'videos',
     'corsheaders',
     'crispy_forms',
+    'django_select2',
+    'dal',
+    'dal_select2',
 ]
 
 MIDDLEWARE = [
@@ -98,7 +101,22 @@ TEMPLATES = [
     },
 ]
 
-
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',  # In-memory cache
+        'TIMEOUT': 300,  # Cache timeout in seconds (optional)
+    },
+    # … default cache config and others
+    "select2": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/2",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+# Tell select2 which cache configuration to use:
+SELECT2_CACHE_BACKEND = "select2"
 
 WSGI_APPLICATION = 'online_test.wsgi.application'
 
@@ -208,3 +226,5 @@ SIMPLE_JWT = {
 
 CRISPY_TEMPLATE_PACK = 'bootstrap5' 
 
+# settings.py
+LOGIN_URL = '/user/login/'

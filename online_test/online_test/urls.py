@@ -18,17 +18,23 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from videos.views import monitor_candidate 
+from django.urls import path
+from exams.views import CandidateAutocomplete
+
 
 urlpatterns = [
     path('', include('website.urls')),
     path('user/', include('users.urls')),
     path('exam/', include('exams.urls')),
+    path('company/', include('companies.urls')),
     path('admin/', admin.site.urls),
     path('admin/monitor/<int:test_id>/', monitor_candidate, name='monitor_candidate'),  # New route
     path('chat/', include('chat.urls')), 
     path('video/', include('videos.urls')), 
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path("select2/", include("django_select2.urls")),
+    path('candidate-autocomplete/', CandidateAutocomplete.as_view(), name='candidate-autocomplete'),
 ]
 
 

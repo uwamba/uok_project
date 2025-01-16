@@ -16,8 +16,8 @@ urlpatterns = [
     path('generate_token/<str:session_id>/', views.generate_token, name='generate_token'),
     path('video_conf/', views.video_conf, name='video_conf'),
     path('testing/', views.testing, name='testing'),
+    path('process_frame/', views.process_frame, name='process_frame'),
     path('', TemplateView.as_view(template_name='index.html')),
-    
 
 
 ]

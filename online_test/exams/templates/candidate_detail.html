@@ -1,0 +1,23 @@
+
+
+
+
+{% extends 'base_admin.html' %}
+
+{% block content %}
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Candidate Details</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Full Name:</strong> {{ candidate.full_name }}</p>
+                <p><strong>Username:</strong> {{ candidate.user.username }}</p>
+                <p><strong>Phone Number:</strong> {{ candidate.phone_number }}</p>
+                <p><strong>Date of Birth:</strong> {{ candidate.date_of_birth }}</p>
+                <p><strong>Access Start Time:</strong> {{ candidate.access_start_time }}</p>
+                <p><strong>Access End Time:</strong> {{ candidate.access_end_time }}</p>
+                <a href="{% url 'candidate_edit' candidate.id %}" class="btn btn-primary">Edit</a>
+            </div>
+        </div>
+    </div>
+    
+{% endblock %}

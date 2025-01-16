@@ -5,7 +5,13 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('test/<int:test_id>/<int:result_id>/', views.test_detail, name='test_detail'),
-    path('api/tests/', views.CandidateTestListView.as_view(), name='candidate-test-list'),
     path('create-test/', views.create_test, name='create_test'),
     path('create-question/', views.create_question, name='create_question'),
+    path('add_test/', views.add_test, name='add_test'),
+    path('create_subject/', views.create_subject, name='create_subject'),
+    path('register_candidate/', views.register_candidate, name='register_candidate'),
+    path('candidates/', views.list_candidates, name='list_candidates'),
+    path('candidate/<int:candidate_id>/detail/', views.candidate_detail, name='candidate_detail'),
+    path('candidate/<int:candidate_id>/edit/', views.candidate_edit, name='candidate_edit'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

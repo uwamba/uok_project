@@ -9,7 +9,6 @@ class Result(models.Model):
     date_taken = models.DateTimeField(auto_now_add=True)
     attempt_number = models.IntegerField(default=0)  # Attempt number for this user
 
-
     def __str__(self):
         return f"{self.candidate.user.username} - {self.test.title} - {self.total_marks} marks"
 class ResultDetail(models.Model):

@@ -3,7 +3,7 @@ import spacy
 from django.shortcuts import render,redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
-from exams.models import Test,Question,QuestionOption
+from exams.models import Subject, Test,Question,QuestionOption
 from results.models import Result,ResultDetail
 from users.models import Candidate
 from nltk.corpus import wordnet as wn
@@ -33,6 +33,7 @@ from django.http import JsonResponse
 from rest_framework_simplejwt.tokens import RefreshToken  # For JWT
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
+from django.db.models import F
 
 
 def get_tokens_for_user(user):
@@ -154,8 +155,11 @@ def candidate_dashboard(request):
 @login_required
 def admin_dashboard(request):
 
-   # admin = Admin.objects.get(user=request.user.id)
-    tests =Test.objects.filter(created_by=request.user.id)
+    admin = Admin.objects.get(user=request.user)
+    
+    # Filter subjects and tests by the admin's company
+    subjects = Subject.objects.filter(company=admin.company)
+    tests = Test.objects.filter(subject__company=admin.company)
     results = Result.objects.all()
     return render(request, 'admin_dashboard.html', {'tests': tests,'results':results})
 
@@ -284,19 +288,32 @@ def take_test(request, test_id):
 
 
     if request.method == 'POST':
-        
+        # Get the current attempt number
+        result = Result.objects.filter(candidate=candidate, test=test).first()
+    
+        if result:
+           attempt_number = result.attempt_number
+        else:
+           attempt_number = 0  # If no previous attempt, set to 0
         
         score = 0
         # Create the result object
-        result = Result.objects.create(candidate=candidate, test=test, total_marks=score)
+            # Get the last attempt number
+        last_result = Result.objects.filter(candidate=candidate, test=test).order_by('-attempt_number').first()
+        
+        if last_result:
+            attempt_number = last_result.attempt_number + 1
+        else:
+            attempt_number = 1  # First attempt
+        result = Result.objects.create(candidate=candidate, test=test, total_marks=score,attempt_number=attempt_number)
         
         # Loop through the questions and store result details
         for question in questions:
             selected_option_ids = request.POST.getlist(str(question.id))  # This will get all selected options for multiple choice
-            
+            qm=question.marks
             if question.question_type == 'multiple':  # For multiple answers
                 # Iterate through selected options for multiple-choice questions  
-                qm=question.marks
+               
                 correct_option_count = QuestionOption.objects.filter(question_id=int(question.id)).count()
                 print("multiple question found")
                 for option_id in selected_option_ids:
@@ -308,6 +325,7 @@ def take_test(request, test_id):
                     if selected_option.is_correct: # Assuming 'correct_options' is a many-to-many field
                         score += qm/correct_option_count
             elif question.question_type == 'single':  # For single choice (single option selected)
+               
                 if selected_option_ids:
                     print("single question found")
                     selected_option = QuestionOption.objects.get(id=int(selected_option_ids[0]))
@@ -343,18 +361,17 @@ def take_test(request, test_id):
         result.save()
 
         # Redirect to the result view page
-        return redirect('result', result_id=result.id)
+        return redirect('dashboard')
     else:
+        
         if remaining_time > 0:
             return render(request, 'take_test.html', {'test': test, 'questions': questions,'remaining_time': max(0, int(remaining_time)), })
         else:
             return redirect('dashboard')
 def test_monitor(request, test_id):
     test = Test.objects.get(id=test_id)
-    questions = test.questions.all().order_by('?')
 
-    # Ensure the user has an associated Candidate instance
-    candidate = Candidate.objects.get(user=request.user)
+    admin = Admin.objects.get(user=request.user)
     now = timezone.now()  # Use Django's timezone.now()
     print('time now',now)
     remaining_time = (test.end_time - now).total_seconds() if test.end_time else 0
@@ -366,81 +383,16 @@ def test_monitor(request, test_id):
     print('start minitoring')
     user = request.user
     exam = Test.objects.get(id=test_id)
+    candidates = exam.candidates.all()
 
     # Start monitoring in separate threads
     screen_thread = threading.Thread(target=capture_screen, args=(user, exam))
     webcam_thread = threading.Thread(target=monitor_webcam, args=(user, exam))
     #screen_thread.start()
     #webcam_thread.start()
+
+    return render(request, 'test_monitor.html', {'test': test,'remaining_time': max(0, int(remaining_time)), 'candidates': candidates})
    
-
-
-    if request.method == 'POST':
-        
-        
-        score = 0
-        # Create the result object
-        result = Result.objects.create(candidate=candidate, test=test, total_marks=score)
-        
-        # Loop through the questions and store result details
-        for question in questions:
-            selected_option_ids = request.POST.getlist(str(question.id))  # This will get all selected options for multiple choice
-            
-            if question.question_type == 'multiple':  # For multiple answers
-                # Iterate through selected options for multiple-choice questions  
-                qm=question.marks
-                correct_option_count = QuestionOption.objects.filter(question_id=int(question.id)).count()
-                print("multiple question found")
-                for option_id in selected_option_ids:
-                    selected_option = QuestionOption.objects.get(id=int(option_id))
-                    
-                    
-                    ResultDetail.objects.create(result=result, question=question, selected_option=selected_option)
-                    # Check if the option is correct
-                    if selected_option.is_correct: # Assuming 'correct_options' is a many-to-many field
-                        score += qm/correct_option_count
-            elif question.question_type == 'single':  # For single choice (single option selected)
-                if selected_option_ids:
-                    print("single question found")
-                    selected_option = QuestionOption.objects.get(id=int(selected_option_ids[0]))
-                    # Check if the option is correct
-                    ResultDetail.objects.create(result=result, question=question, selected_option=selected_option)
-                    if selected_option.is_correct: # Assuming 'correct_options' is a many-to-many field
-                        score += qm
-                  
-                    
-            elif question.question_type == 'text':  # For text input questions
-                answer_text = request.POST.get(str(question.id))  # Get the user's answer as text
-
-                # Compute similarity
-                answer = mark_text_question(answer_text, question.answer_text)
-                score += qm * answer["percentage_score"]/100
-                
-                #answer = mark_text_question(sentence1, sentence2)
-                print("Is Correct:", answer["is_correct"])
-                print("Similarity Score:", answer["similarity_score"])
-                print("percentage Score:", answer["percentage_score"])
-                print("Feedback:", answer["feedback"])
-                
-                
-
-                ResultDetail.objects.create(result=result, question=question, selected_option=None, answer_text=answer_text)
-                if answer_text == question.answer_text:  # Compare with correct answer
-                    score += 1
-                    # Optionally, store text answer as a ResultDetail if required
-                    
-
-        # After processing all answers, update the total marks in the result object
-        result.total_marks = score
-        result.save()
-
-        # Redirect to the result view page
-        return redirect('result', result_id=result.id)
-    else:
-        if remaining_time > 0:
-            return render(request, 'test_monitor.html', {'test': test, 'questions': questions,'remaining_time': max(0, int(remaining_time)), })
-        else:
-            return redirect('dashboard')
     
 
 @login_required

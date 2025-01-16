@@ -58,7 +58,23 @@
   </form>
 
   <!-- open vidu test code -->
-  
+  <div id="chat-container">
+    <div id="chat-header">
+        <h4>Chat with us</h4>
+        <button id="close-chat" onclick="toggleChat()">X</button>
+    </div>
+    <div id="chat-body">
+        <!-- Chat messages will appear here -->
+        <div id="chat-messages"></div>
+    </div>
+    <div id="chat-input">
+        <input type="text" id="message-input" placeholder="Type your message..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<!-- Button to open the chat -->
+<button id="open-chat" onclick="toggleChat()">Chat</button>
    
 </div>
         </div>
@@ -166,6 +182,22 @@ createToken(sessionId,user).then(response => {
             const videoElement = document.querySelector(`video[src="${event.stream.streamId}"]`);
             if (videoElement) videoContainer.removeChild(videoElement);
         });
+
+        //chat 
+        // Handle chat messages
+      session.on('signal:chat', event => {
+        const message = event.data;
+        const chatMessages = document.getElementById('chat-messages');
+        const messageDiv = document.createElement('div');
+        messageDiv.textContent = message;
+        messageDiv.style.padding = '8px';
+        messageDiv.style.marginBottom = '8px';
+        messageDiv.style.backgroundColor = '#e0e0e0';
+        messageDiv.style.borderRadius = '5px';
+        chatMessages.appendChild(messageDiv);
+       
+        console.log("chat started hererrrrrrrrrrrr")
+      });
 
     // Connect to the session
     session.connect(token, { clientData: user })
@@ -319,7 +351,86 @@ function updateGridLayout() {
 }
 
 
+function toggleChat() {
+    const chatContainer = document.getElementById('chat-container');
+    const openChatButton = document.getElementById('open-chat');
+    
+    if (chatContainer.style.display === 'none' || chatContainer.style.display === '') {
+        chatContainer.style.display = 'flex';
+        openChatButton.style.display = 'none'; // Hide open button when chat is open
+    } else {
+        chatContainer.style.display = 'none';
+        openChatButton.style.display = 'block'; // Show open button when chat is closed
+    }
+}
 
+// Send message and add it to the chat
+function sendMessage() {
+    const messageInput = document.getElementById('message-input');
+    const chatMessages = document.getElementById('chat-messages');
+    
+    const messageText = messageInput.value.trim();
+
+    if (messageText) {
+        console.log('sart sending');
+        console.log(session)
+        console.log('sart sending');
+        // Display the message locally
+        const messageDiv = document.createElement('div');
+        messageDiv.textContent = messageText;
+        messageDiv.style.padding = '8px';
+        messageDiv.style.marginBottom = '8px';
+        messageDiv.style.backgroundColor = '#e0e0e0';
+        messageDiv.style.borderRadius = '5px';
+        chatMessages.appendChild(messageDiv);
+
+        // Ensure session is connected before sending signal
+        if (session) {
+            console.error('Session sending chat message:');
+            session.signal({
+                type: 'chat',
+                data: messageText,
+            }).catch(error => {
+                console.error('Error sending chat message:', error);
+            });
+        } else {
+            console.warn('Session is not connected. Cannot send message.');
+        }
+
+        // Clear input field and scroll to bottom
+        messageInput.value = '';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+function trackTabStatus() {
+  // Detect focus and blur (when the tab gets focus or loses focus)
+  window.addEventListener('focus', function() {
+    console.log('Tab is focused!');
+  });
+
+  window.addEventListener('blur', function() {
+    console.log('Tab is blurred (inactive)!');
+  });
+
+  // Detect visibility change (when the tab becomes visible or hidden)
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      console.log('Tab is hidden!');
+    } else {
+      console.log('Tab is visible!');
+    }
+  });
+
+  // Check if the tab is visible when the page loads
+  if (document.hidden) {
+    console.log('Tab is initially hidden!');
+  } else {
+    console.log('Tab is initially visible!');
+  }
+}
+
+trackTabStatus();
 
     </script>
     {% endblock %}

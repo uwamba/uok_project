@@ -20,6 +20,12 @@ import base64
 import random
 from requests.auth import HTTPBasicAuth
 
+from PIL import Image
+from io import BytesIO
+import cv2
+from concurrent.futures import ThreadPoolExecutor
+import torch
+import dlib
 # Generate a random integer between a range
 random_integer = random.randint(1000, 10000)  # Random integer between 1 and 100
 print(f"Random integer: {random_integer}")
@@ -375,3 +381,179 @@ def monitor_candidate(request, test_id):
         'session_id': "session.session_id",
         'token': "token",
     })
+
+
+
+# Thread pool to handle multiple video streams
+executor = ThreadPoolExecutor(max_workers=5)
+@csrf_exempt
+def process_frame(request):
+    print(request.method)
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            #print('dataaaaa',data)
+            #user_name = data.get('username')
+            frame = data.get('frame')
+            print('frame')
+            video_id = data.get('videoId')
+            frame_data = frame.split('data:image/jpeg;base64,')[1]
+            img_data = base64.b64decode(frame_data)
+           # print(img_data)
+            predFacePose(img_data)
+            # Submit frame for analysis in a separate thread
+            face = executor.submit(analyze_frame, img_data, video_id,frame_data)
+            phone = executor.submit(detect_phone, img_data, video_id) 
+            result_face = face.result()
+            result_phone = phone.result()
+  
+            #result2 = future2.result()
+            #print('the result of analysis here:', result)
+            print('the result of analysis here3:', result_phone)
+            
+            return JsonResponse(result_face)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+def analyze_frame(img_data, video_id,frame_data):
+ 
+        try:
+            # Convert to OpenCV image
+        
+            np_img = np.frombuffer(img_data, np.uint8)
+            img = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
+            # Perform face detection
+            landmark_detector = dlib.shape_predictor(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+            face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+            faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+            for face in faces:
+            
+                
+                    landmarks = landmark_detector(gray, face)
+                    print('---------------------------------------')
+                    
+                    # Get the positions of the eyes (index 36-41 for left eye and 42-47 for right eye)
+                    left_eye = np.array([(landmarks.part(i).x, landmarks.part(i).y) for i in range(36, 42)])
+                    right_eye = np.array([(landmarks.part(i).x, landmarks.part(i).y) for i in range(42, 48)])
+                    
+                    # Find the center of both eyes
+                    left_eye_center = np.mean(left_eye, axis=0)
+                    right_eye_center = np.mean(right_eye, axis=0)
+
+                    # Calculate the angle between the eyes to estimate the head orientation
+                    eye_center_x = (left_eye_center[0] + right_eye_center[0]) / 2
+                    eye_center_y = (left_eye_center[1] + right_eye_center[1]) / 2
+                    
+                    # If the center of the eyes moves left or right, we can assume the head is turning
+                    if eye_center_x < frame_data.shape[1] / 2:
+                        print('Looking Left')
+                        head_direction = "Looking Left"
+                    else:
+                        print('Looking Right')
+                        head_direction = "Looking Right"
+
+                    # Draw the face and the direction text
+                    cv2.rectangle(frame_data, (face.left(), face.top()), (face.right(), face.bottom()), (0, 255, 0), 2)
+                    cv2.putText(frame_data, head_direction, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                    return {'video_id': video_id, 'faces_detected': len(faces)}
+        except Exception as e:
+                    
+                    print(f"Error occurred: {e}")
+                    return None
+
+
+
+model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
+def detect_phone(frame_data,video_id):
+    # Decode the base64 image
+    #img_data = base64.b64decode(frame_data)
+    np_arr = np.frombuffer(frame_data, np.uint8)
+    img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+
+    # Convert BGR to RGB
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+    # Run YOLOv5 model on the image
+    results = model(img_rgb)
+    print('model result',results)
+    # Extract detections
+    detections = results.pandas().xyxy[0]
+   
+    for _, row in detections.iterrows():
+        if row['name'] == 'cell phone':
+            print(f"Phone detected with confidence: {row['confidence']:.2f}")
+            #return True, row['confidence']
+            return {'video_id': video_id, 'Phone detected': row['confidence']}
+
+    return False, None
+from facenet_pytorch import MTCNN
+from matplotlib import pyplot  as plt
+
+import math
+mtcnn = MTCNN(image_size=160,
+              margin=0,
+              min_face_size=20,
+              thresholds=[0.6, 0.7, 0.7], # MTCNN thresholds
+              factor=0.709,
+              post_process=True,
+              device='cpu' # If you don't have GPU
+        )
+def npAngle(a, b, c):
+    ba = np.array(a) - np.array(b)
+    bc = np.array(c) - np.array(b) 
+    
+    cosine_angle = np.dot(ba, bc)/(np.linalg.norm(ba)*np.linalg.norm(bc))
+    angle = np.arccos(cosine_angle)
+    
+    return np.degrees(angle)
+def predFacePose(imgaePath):
+    with open('output_image.jpg', 'wb') as file:
+     file.write(imgaePath)
+   
+    im = Image.open('output_image.jpg') # Reading the image
+    
+    if im.mode != "RGB": # Convert the image if it has more than 3 channels, because MTCNN will refuse anything more than 3 channels.
+        im = im.convert('RGB')
+    
+    bbox_, prob_, landmarks_ = mtcnn.detect(im, landmarks=True) # The detection part producing bounding box, probability of the detected face, and the facial landmarks
+    angle_R_List = []
+    angle_L_List = []
+    predLabelList = []
+   
+    for bbox, landmarks, prob in zip(bbox_, landmarks_, prob_):
+        if bbox is not None: # To check if we detect a face in the image
+            if prob > 0.9: # To check if the detected face has probability more than 90%, to avoid 
+                angR = npAngle(landmarks[0], landmarks[1], landmarks[2]) # Calculate the right eye angle
+                angL = npAngle(landmarks[1], landmarks[0], landmarks[2])# Calculate the left eye angle
+                angN = npAngle(landmarks[0], landmarks[2], landmarks[1])  # Nose angle
+                angle_R_List.append(angR)
+                angle_L_List.append(angL)
+                print("Nose Angle: {} - Right Eye Angle: {} - Left Eye Angle: {}".format(angN, angR, angL))
+
+                if ((int(angR) in range(35, 57)) and (int(angL) in range(35, 58))):
+                    predLabel='Frontal'
+                    predLabelList.append(predLabel)
+                    print(predLabelList)
+                else: 
+                    if angR < angL and angN >= 40:
+                        predLabel = 'Left Profile'
+                    elif angR > angL and angN >= 40:
+                        predLabel = 'Right Profile'
+                    elif angN > 60:
+                        predLabel = 'Upward'
+                    elif angN < 40:
+                        predLabel = 'Downward'
+                    else:
+                        predLabel = 'Unknown'
+                    predLabelList.append(predLabel)
+            else:
+                print('The detected face is Less then the detection threshold')
+        else:
+            print('No face detected in the image')
+#Nose Angle: 96.36418748661991 - Right Eye Angle: 41.19043268321722 - Left Eye Angle: 42.445379830162885
+#Nose Angle: 59.782075240300735 - Right Eye Angle: 31.645555243218418 - Left Eye Angle: 88.57236951648083
+#Nose Angle: 74.22350687040046 - Right Eye Angle: 58.61101968012335 - Left Eye Angle: 47.16547344947621

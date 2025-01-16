@@ -25,7 +25,115 @@
             <link href="{% static '/css/nice-select.css' %}" rel="stylesheet">
             <link href="{% static '/css/style.css' %}" rel="stylesheet">
 
-   </head>
+            <link rel="stylesheet" type="text/css" href="{% static 'admin/css/widgets.css' %}">
+            <script type="text/javascript" src="{% static 'admin/js/core.js' %}"></script>
+            <script type="text/javascript" src="{% static 'admin/js/admin/RelatedObjectLookup.js' %}"></script>
+            <script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+            <script type="text/javascript" src="{% static 'admin/js/actions.js' %}"></script>
+
+            <style>
+              .candidate-container {
+                  width: 300px;
+                  margin-top: 10px;
+              }
+          
+              .scrollable-container {
+                  max-height: 200px;
+                  overflow-y: auto;
+                  border: 1px solid #ccc;
+                  padding: 5px;
+                  margin-top: 10px;
+              }
+          
+              .candidate-item {
+                  margin: 5px 0;
+              }
+          
+              #candidateSearch {
+                  width: 100%;
+                  padding: 5px;
+                  margin-bottom: 10px;
+                  border: 1px solid #ccc;
+              }
+              /* Floating Chat Container Styles */
+#chat-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 400px;
+    height: 400px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    display: none; /* Initially hidden */
+    flex-direction: column;
+    z-index: 9999;
+}
+
+#chat-header {
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px;
+    text-align: center;
+    border-radius: 10px 10px 0 0;
+}
+
+#chat-body {
+    padding: 10px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+#chat-input {
+    display: flex;
+    padding: 10px;
+    background-color: #f1f1f1;
+    border-radius: 0 0 10px 10px;
+}
+
+#chat-input input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+#chat-input button {
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#chat-input button:hover {
+    background-color: #0056b3;
+}
+
+/* Open Chat Button */
+#open-chat {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #007bff;
+    color: white;
+    padding: 15px;
+    border-radius: 50%;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 9999;
+}
+
+#open-chat:hover {
+    background-color: #0056b3;
+}
+
+          </style>
+          
+          </head>
 
    <body>
        
@@ -54,23 +162,26 @@
                         <a href="#" class="list-group-item list-group-item-action py-2 ripple" aria-current="true">
                           <i class="fas fa-tachometer-alt fa-fw me-3"></i><span>Main dashboard</span>
                         </a>
+                        <a href="{% url 'create_subject' %}" class="list-group-item list-group-item-action py-2 ripple active">Create New Subject</a>
+                  
                         <a href="#" class="list-group-item list-group-item-action py-2 ripple active">
                           <i class="fas fa-chart-area fa-fw me-3"></i><span>Tests</span>
                         </a>
-                        <a href="{% url 'create_test' %}" class="list-group-item list-group-item-action py-2 ripple active">
+                        <a href="{% url 'add_test' %}" class="list-group-item list-group-item-action py-2 ripple active">
                           <i class="fas fa-chart-area fa-fw me-3"></i><span>Create Tests</span>
                         </a>
                         <a href="{% url 'create_question' %}" class="list-group-item list-group-item-action py-2 ripple active">
                           <i class="fas fa-chart-area fa-fw me-3"></i><span>Create Question</span>
                         </a>
-                        <a href="{% url 'test' test.id %}" class="list-group-item list-group-item-action py-2 ripple active">
-                          <i class="fas fa-chart-area fa-fw me-3"></i><span>Monitor</span>
-                        </a>
+                       
                         <a href="#" class="list-group-item list-group-item-action py-2 ripple active">
                           <i class="fas fa-chart-area fa-fw me-3"></i><span>Results</span>
                         </a>
-                        <a href="#" class="list-group-item list-group-item-action py-2 ripple active">
-                          <i class="fas fa-chart-area fa-fw me-3"></i><span>Candidate</span>
+                        <a href="{% url 'register_candidate' %}" class="list-group-item list-group-item-action py-2 ripple active">
+                          <i class="fas fa-chart-area fa-fw me-3"></i><span>Add new Candidate</span>
+                        </a>
+                        <a href="{% url 'list_candidates' %}" class="list-group-item list-group-item-action py-2 ripple active">
+                          <i class="fas fa-chart-area fa-fw me-3"></i><span>Candidate List</span>
                         </a>
                         <a href="#" class="list-group-item list-group-item-action py-2 ripple"><i
                             class="fas fa-chart-line fa-fw me-3"></i><span>Change Password</span></a>

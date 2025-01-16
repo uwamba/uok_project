@@ -38,30 +38,99 @@
 #video-container video {
 	position: relative;
 	float: left;
-	width: 50%;
+	width: 100%;
 	cursor: pointer;
 }
 
-#video-container div {
-	float: left;
-	width: 50%;
-	position: relative;
-	margin-left: -50%;
-}
 
-#video-container p {
-	display: inline-block;
-	background: #f8f8f8;
-	padding-left: 5px;
-	padding-right: 5px;
-	color: #777777;
-	font-weight: bold;
-	border-bottom-right-radius: 4px;
-}
+
+        #video-container {
+            position: fixed;
+            width:200px;
+            top: 70px; /* Adjust distance from the top */
+            right: 0px; /* Adjust distance from the right */
+            z-index: 9999; /* Ensure it stays on top of other content */
+            background-color: rgba(0, 0, 0, 0.5); /* Optional: add a background color for visibility */
+            padding: 10px; /* Optional: add padding inside the container */
+        }
 
 video {
 	width: 100%;
 	height: auto;
+}
+#chat-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 400px;
+    height: 400px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    display: none; /* Initially hidden */
+    flex-direction: column;
+    z-index: 9999;
+}
+
+#chat-header {
+    background-color: #007bff;
+    color: #fff;
+    padding: 10px;
+    text-align: center;
+    border-radius: 10px 10px 0 0;
+}
+
+#chat-body {
+    padding: 10px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+#chat-input {
+    display: flex;
+    padding: 10px;
+    background-color: #f1f1f1;
+    border-radius: 0 0 10px 10px;
+}
+
+#chat-input input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+#chat-input button {
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#chat-input button:hover {
+    background-color: #0056b3;
+}
+
+/* Open Chat Button */
+#open-chat {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #007bff;
+    color: white;
+    padding: 15px;
+    border-radius: 50%;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 9999;
+}
+
+#open-chat:hover {
+    background-color: #0056b3;
 }
           </style>
    </head>

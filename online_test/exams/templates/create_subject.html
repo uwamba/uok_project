@@ -1,0 +1,12 @@
+{% extends 'base_admin.html' %}
+
+{% block content %}
+  <div class="container mt-5">
+    <h2>Create New Subject</h2>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">Create Subject</button>
+    </form>
+  </div>
+{% endblock %}

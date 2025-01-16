@@ -1,0 +1,27 @@
+{% extends 'base_admin.html' %}
+
+{% block content %}
+  <div class="container mt-5">
+    <h2>Register New Candidate</h2>
+    <form method="POST">
+      {% csrf_token %}
+      <label>Username:</label>
+      <input type="text" name="username" required><br>
+  
+      <label>Password:</label>
+      <input type="password" name="password" required><br>
+  
+      <label>Full Name:</label>
+      <input type="text" name="full_name" required><br>
+  
+      <label>Date of Birth:</label>
+      <input type="date" name="date_of_birth" required><br>
+  
+      <label>Phone Number:</label>
+      <input type="text" name="phone_number" required><br>
+  
+      <button type="submit">Create Candidate</button>
+  </form>
+  
+  </div>
+{% endblock %}
