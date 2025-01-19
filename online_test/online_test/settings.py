@@ -228,3 +228,4 @@ CRISPY_TEMPLATE_PACK = 'bootstrap5'
 
 # settings.py
 LOGIN_URL = '/user/login/'
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB

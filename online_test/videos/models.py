@@ -8,6 +8,8 @@ import json
 from django.core.exceptions import ValidationError
 from django.utils.timezone import now
 
+from users.models import Candidate
+
 def video_upload_path(instance, filename):
     return os.path.join('uploads', filename)
 
@@ -26,7 +28,7 @@ class MonitoringLog(models.Model):
         ('audio', 'Audio'),
     ]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE ,default=None)
     test = models.ForeignKey(Test, on_delete=models.CASCADE)
     timestamp = models.DateTimeField(auto_now_add=True)
     activity_type = models.CharField(max_length=50, choices=ACTIVITY_TYPES)
@@ -48,5 +50,5 @@ class MonitoringLog(models.Model):
         return None
 
     def __str__(self):
-        return f"{self.user.username} - {self.activity_type} at {self.timestamp}"
+        return f"{self.candidate.email} - {self.activity_type} at {self.timestamp}"
     

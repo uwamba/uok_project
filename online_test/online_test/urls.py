@@ -20,6 +20,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from videos.views import monitor_candidate 
 from django.urls import path
 from exams.views import CandidateAutocomplete
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 urlpatterns = [
@@ -36,5 +38,7 @@ urlpatterns = [
     path("select2/", include("django_select2.urls")),
     path('candidate-autocomplete/', CandidateAutocomplete.as_view(), name='candidate-autocomplete'),
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

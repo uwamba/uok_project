@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring Log Details</title>
+</head>
+<body>
+    <h1>Monitoring Log Details</h1>
+    
+    <p><strong>User:</strong> {{ log_entry.candidate.full_name }}</p>
+    <p><strong>Test:</strong> {{ log_entry.test.name }}</p>
+    <p><strong>Activity Type:</strong> {{ log_entry.activity_type }}</p>
+    <p><strong>Timestamp:</strong> {{ log_entry.timestamp }}</p>
+    <p><strong>Duration:</strong> {{ log_entry.duration }}</p>
+
+    {% if log_entry.screenshot %}
+        <h2>Screenshot</h2>
+        <p>url {{ log_entry.screenshot }}</p>
+        <img src="/media/{{ log_entry.screenshot }}" alt="Screenshot" width="300px" style="width: 400px; height: auto;">
+    {% else %}
+        <p>No screenshot available for this log.</p>
+    {% endif %}
+
+    <p><strong>Activity Data:</strong></p>
+    <pre>{{ log_entry.data }}</pre>
+</body>
+</html>

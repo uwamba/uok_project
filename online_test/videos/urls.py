@@ -18,6 +18,10 @@ urlpatterns = [
     path('testing/', views.testing, name='testing'),
     path('process_frame/', views.process_frame, name='process_frame'),
     path('', TemplateView.as_view(template_name='index.html')),
+    path('upload-monitoring-log/', views.upload_monitoring_log, name='upload_monitoring_log'),
+    path('monitoring-log/<int:log_id>/', views.monitoring_log_detail, name='monitoring_log_detail'),
+    path('get_logs/<int:test_id>/', views.get_logs, name='get_logs'),
+     path('get_log/<int:log_id>/', views.get_log, name='get_log'),
 
 
 ]

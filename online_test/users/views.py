@@ -365,7 +365,7 @@ def take_test(request, test_id):
     else:
         
         if remaining_time > 0:
-            return render(request, 'take_test.html', {'test': test, 'questions': questions,'remaining_time': max(0, int(remaining_time)), })
+            return render(request, 'take_test.html', {'test': test, 'questions': questions,'remaining_time': max(0, int(remaining_time)),'userId':candidate.id })
         else:
             return redirect('dashboard')
 def test_monitor(request, test_id):

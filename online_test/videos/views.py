@@ -1,4 +1,6 @@
 import threading
+from datetime import datetime
+from django.conf import settings
 from django.http import StreamingHttpResponse, JsonResponse, FileResponse
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
@@ -6,6 +8,7 @@ import os
 from django.shortcuts import render
 
 import numpy as np
+from users.models import Candidate
 from scipy.spatial.transform import Rotation as R
 
 from exams.models import Test
@@ -365,8 +368,81 @@ def video_conf(request):
 def testing(request):
     return render(request, 'index.html')
 
+from django.core.files.base import ContentFile
+from django.utils.timezone import now
+@csrf_exempt
+def upload_monitoring_log(request):
+    if request.method == 'POST':
+        try:
+            # Extract fields from the request
+            user_id = request.POST.get('user_id')
+            test_id = request.POST.get('test_id')
+            activity_type = request.POST.get('activity_type')
+            activityData = request.POST.get('activityData')
+            screenshot_data = request.POST.get('screenshot')
+            print('user',user_id)
+            print('test_id',test_id)
+            print('activityData',activityData)
+         
 
-# OpenVidu server credentials
+            # Validate required fields
+            if not (user_id and test_id and activity_type and activityData):
+                return JsonResponse({'error': 'Missing required fields'}, status=400)
+
+            # Decode the screenshot if provided
+            screenshot_file = None
+            candidate_instance = Candidate.objects.get(id=user_id)
+            test = Test.objects.get(id=test_id)
+            if screenshot_data:
+                # Split the base64 data into format and image string
+                format, imgstr = screenshot_data.split(';base64,')
+                ext = format.split('/')[-1]  # Get the file extension (e.g., 'png', 'jpeg')
+
+                # Decode the base64 image string
+                img_data = base64.b64decode(imgstr)
+
+                # Define the folder where images will be saved
+                upload_folder = os.path.join(settings.MEDIA_ROOT, 'monitoring_screenshots')
+
+                # Create the folder if it doesn't exist
+                if not os.path.exists(upload_folder):
+                    os.makedirs(upload_folder)
+
+                # Generate a filename
+                timestamp = datetime.now().strftime('%Y%m%d%H%M%S')  # Example: 20250118_153045
+                file_name = f'screenshot_{timestamp}.{ext}'
+               
+                # Create a file object to save the image to the server
+                screenshot_file = ContentFile(img_data, name=file_name)
+
+                # Save the image in the folder
+                file_path = os.path.join(upload_folder, file_name)
+
+                # Save the file to the model's ImageField (assuming it's in the model)
+                log_entry = MonitoringLog.objects.create(
+                    candidate=candidate_instance,  # Assuming user is logged in
+                    test=test,
+                    activity_type=candidate_instance,
+                    data=activityData,
+                    screenshot=screenshot_file,  # The file will be automatically saved in the 'monitoring_screenshots' folder
+                    start_time=now(),
+                )
+
+
+            return JsonResponse({
+                'message': 'Monitoring log created successfully',
+                'log_id': log_entry.id,
+                'screenshot_url': file_name,
+            })
+        except Candidate.DoesNotExist:
+            
+            return JsonResponse({'error': 'User not found'}, status=404)
+        except Test.DoesNotExist:
+            return JsonResponse({'error': 'Test not found'}, status=404)
+        except Exception as e:
+            print('error', str(e))
+            return JsonResponse({'error': str(e)}, status=500)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 def monitor_candidate(request, test_id):
     # Create an OpenVidu session
@@ -399,24 +475,31 @@ def process_frame(request):
             video_id = data.get('videoId')
             frame_data = frame.split('data:image/jpeg;base64,')[1]
             img_data = base64.b64decode(frame_data)
-           # print(img_data)
-            predFacePose(img_data)
-            # Submit frame for analysis in a separate thread
-            face = executor.submit(analyze_frame, img_data, video_id,frame_data)
-            phone = executor.submit(detect_phone, img_data, video_id) 
-            result_face = face.result()
-            result_phone = phone.result()
-  
-            #result2 = future2.result()
-            #print('the result of analysis here:', result)
-            print('the result of analysis here3:', result_phone)
-            
-            return JsonResponse(result_face)
+            pred_face_pose_future = executor.submit(predFacePose, img_data, video_id)
+            face_future = executor.submit(analyze_frame, img_data, video_id)
+            phone_future = executor.submit(detect_phone, img_data, video_id)
+
+            # Wait for the results
+            result_face = face_future.result()
+            result_phone = phone_future.result()
+            result_pred_face_pose = pred_face_pose_future.result()
+            response_data = {
+            'result_pred_face_pose': result_pred_face_pose,
+            'result_face': result_face,
+            'result_phone': result_phone,
+            }
+
+            # Process the results if needed
+            #print(f"Face Pose Result: {result_pred_face_pose}")
+            #print(f"Face Analysis Result: {result_face}")
+            #print(f"Phone Detection Result: {result_phone}")
+                     
+            return JsonResponse(response_data)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
-def analyze_frame(img_data, video_id,frame_data):
+def analyze_frame(img_data, video_id):
  
         try:
             # Convert to OpenCV image
@@ -424,46 +507,17 @@ def analyze_frame(img_data, video_id,frame_data):
             np_img = np.frombuffer(img_data, np.uint8)
             img = cv2.imdecode(np_img, cv2.IMREAD_COLOR)
             # Perform face detection
-            landmark_detector = dlib.shape_predictor(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
             face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
             faces = face_cascade.detectMultiScale(gray, 1.1, 4)
-            for face in faces:
             
-                
-                    landmarks = landmark_detector(gray, face)
-                    print('---------------------------------------')
-                    
-                    # Get the positions of the eyes (index 36-41 for left eye and 42-47 for right eye)
-                    left_eye = np.array([(landmarks.part(i).x, landmarks.part(i).y) for i in range(36, 42)])
-                    right_eye = np.array([(landmarks.part(i).x, landmarks.part(i).y) for i in range(42, 48)])
-                    
-                    # Find the center of both eyes
-                    left_eye_center = np.mean(left_eye, axis=0)
-                    right_eye_center = np.mean(right_eye, axis=0)
-
-                    # Calculate the angle between the eyes to estimate the head orientation
-                    eye_center_x = (left_eye_center[0] + right_eye_center[0]) / 2
-                    eye_center_y = (left_eye_center[1] + right_eye_center[1]) / 2
-                    
-                    # If the center of the eyes moves left or right, we can assume the head is turning
-                    if eye_center_x < frame_data.shape[1] / 2:
-                        print('Looking Left')
-                        head_direction = "Looking Left"
-                    else:
-                        print('Looking Right')
-                        head_direction = "Looking Right"
-
-                    # Draw the face and the direction text
-                    cv2.rectangle(frame_data, (face.left(), face.top()), (face.right(), face.bottom()), (0, 255, 0), 2)
-                    cv2.putText(frame_data, head_direction, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-                    return {'video_id': video_id, 'faces_detected': len(faces)}
+            return {'video_id': video_id, 'faces_detected': len(faces)}
         except Exception as e:
                     
-                    print(f"Error occurred: {e}")
-                    return None
+          print(f"Error occurred: {e}")
+          return None
 
 
 
@@ -483,13 +537,29 @@ def detect_phone(frame_data,video_id):
     # Extract detections
     detections = results.pandas().xyxy[0]
    
+    detected_objects = []
     for _, row in detections.iterrows():
-        if row['name'] == 'cell phone':
-            print(f"Phone detected with confidence: {row['confidence']:.2f}")
-            #return True, row['confidence']
-            return {'video_id': video_id, 'Phone detected': row['confidence']}
+        detected_objects.append({
+            'name': row['name'],  # Object name (e.g., "cell phone")
+            'confidence': row['confidence'],  # Confidence score
+            'xmin': row['xmin'],  # Bounding box left
+            'ymin': row['ymin'],  # Bounding box top
+            'xmax': row['xmax'],  # Bounding box right
+            'ymax': row['ymax'],  # Bounding box bottom
+        })
+        
+    # Example: Check for specific objects and print
+    for obj in detected_objects:
+        if obj['name'] == 'cell phone':
+            print(f"Phone detected with confidence: {obj['confidence']:.2f}")
+    
+    # Return all detected objects as JSON response
+    return {'video_id': video_id, 'detections': detected_objects}
 
-    return False, None
+
+
+
+
 from facenet_pytorch import MTCNN
 from matplotlib import pyplot  as plt
 
@@ -510,7 +580,7 @@ def npAngle(a, b, c):
     angle = np.arccos(cosine_angle)
     
     return np.degrees(angle)
-def predFacePose(imgaePath):
+def predFacePose(imgaePath,video_id):
     with open('output_image.jpg', 'wb') as file:
      file.write(imgaePath)
    
@@ -538,6 +608,8 @@ def predFacePose(imgaePath):
                     predLabel='Frontal'
                     predLabelList.append(predLabel)
                     print(predLabelList)
+                    
+                    return predLabelList
                 else: 
                     if angR < angL and angN >= 40:
                         predLabel = 'Left Profile'
@@ -550,6 +622,7 @@ def predFacePose(imgaePath):
                     else:
                         predLabel = 'Unknown'
                     predLabelList.append(predLabel)
+                    return predLabelList
             else:
                 print('The detected face is Less then the detection threshold')
         else:
@@ -557,3 +630,46 @@ def predFacePose(imgaePath):
 #Nose Angle: 96.36418748661991 - Right Eye Angle: 41.19043268321722 - Left Eye Angle: 42.445379830162885
 #Nose Angle: 59.782075240300735 - Right Eye Angle: 31.645555243218418 - Left Eye Angle: 88.57236951648083
 #Nose Angle: 74.22350687040046 - Right Eye Angle: 58.61101968012335 - Left Eye Angle: 47.16547344947621
+         
+from django.shortcuts import render, get_object_or_404
+def monitoring_log_detail(request, log_id):
+    # Fetch the MonitoringLog object or return a 404 if it doesn't exist
+    log_entry = get_object_or_404(MonitoringLog, id=log_id)
+
+    context = {
+        'log_entry': log_entry,  # Pass the log entry to the template
+    }
+    return render(request, 'monitoring_log_detail.html', context)
+@csrf_exempt
+def get_logs(request, test_id):
+    logs = MonitoringLog.objects.filter(test_id=test_id).order_by('timestamp')
+    logs_data = [
+    {
+        'candidate': {
+            'id': log.candidate.id,
+            'full_name': log.candidate.full_name,  # Assuming the Candidate model has a `name` field
+        },
+        'activity_type': log.activity_type,
+        'timestamp': log.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+        'data': log.data,
+        'id': log.id,
+    }
+    for log in logs
+    ]
+    return JsonResponse({'logs': logs_data})
+
+@csrf_exempt
+def get_log(request, log_id):
+    log = MonitoringLog.objects.get(id=log_id)
+    log_data = {
+        'candidate': {
+            'id': log.candidate.id,
+            'full_name': log.candidate.full_name,  # Assuming the Candidate model has a `full_name` field
+        },
+        'activity_type': log.activity_type,
+        'timestamp': log.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+        'data': log.data,
+        'id': log.id,
+    }
+    print(log_data)
+    return JsonResponse({'logs': log_data})
