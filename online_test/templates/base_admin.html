@@ -68,6 +68,7 @@
     display: none; /* Initially hidden */
     flex-direction: column;
     z-index: 9999;
+    overflow-y: auto;
 }
 
 #chat-header {
@@ -128,6 +129,11 @@
 
 #open-chat:hover {
     background-color: #0056b3;
+}
+#chat-messages {
+    height: 300px; /* Set a height to make it scrollable */
+    overflow-y: auto; 
+    background-color:rgb(22, 180, 93);
 }
 
           </style>

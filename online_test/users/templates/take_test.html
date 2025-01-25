@@ -156,8 +156,10 @@
         //const videoElement = document.getElementById('videoElement');
 
 
-        const user={{user.id}}
-        const sessionId='MYSESSIONID000000000000000020'
+        const userId = "{{ user.id|escapejs }}";
+        const user = "{{ user.username|escapejs }}";
+        const testId = "{{ test.id|escapejs }}";
+        const sessionId="S000"+"{{ test.id|escapejs }}";
         console.log('generated username', user);
     
         // Access the user's webcam
@@ -171,7 +173,7 @@ createSession(sessionId).then(response => {
     const sessionId = response; 
     console.log('response session Id:', sessionId); 
     console.log('-------------------------------- create session---------------------')
-createToken(sessionId,user).then(response => {
+createToken(sessionId,user,userId,testId).then(response => {
 		const token = response.token; // Extract the token string
 		console.log('Extracted Token:', token); 
         //subscribe to stream
@@ -209,7 +211,7 @@ createToken(sessionId,user).then(response => {
       });
 
     // Connect to the session
-    session.connect(token, { clientData: user })
+    session.connect(token, { username: user,userId:userId,testId:testId })
         .then(() => {
             // After connecting, publish your video stream
            
@@ -295,7 +297,7 @@ async function createSession(sessionId) {
         console.error('Error creating session:', error.message || error);
     }
 }
-async function createToken(sessionId,username) {
+async function createToken(sessionId,username,userId,testId) {
 
     const csrftoken = getCSRFToken();  // Assuming you're using CSRF token protection, replace this if necessary
 
@@ -309,7 +311,7 @@ async function createToken(sessionId,username) {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrftoken,  // Include CSRF token if required by your backend
             },
-            body: JSON.stringify({ username: username, customSessionId: sessionId }), // Send the participant's username in the body
+            body: JSON.stringify({ username: username, customSessionId: sessionId,userId: userId, testId: testId}), // Send the participant's username in the body
         });
 
         if (!response.ok) {
@@ -415,6 +417,7 @@ function sendMessage() {
 async function trackTabStatus() {
  const userId = "{{ userId|escapejs }}";
  const testId = "{{ test.id|escapejs }}";
+ console.log('initial test id here',testId);
  //const screenshotDataURL =  await takeScreenShot();
   // Detect focus and blur (when the tab gets focus or loses focus)
   window.addEventListener('focus', function() {

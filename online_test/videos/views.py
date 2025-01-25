@@ -466,6 +466,7 @@ executor = ThreadPoolExecutor(max_workers=5)
 def process_frame(request):
     print(request.method)
     if request.method == 'POST':
+       
         try:
             data = json.loads(request.body)
             #print('dataaaaa',data)
@@ -473,11 +474,16 @@ def process_frame(request):
             frame = data.get('frame')
             print('frame')
             video_id = data.get('videoId')
+            userId = data.get('userId')
+            #print(data)
+            testId = data.get('testId')
+            candidate_instance = Candidate.objects.get(user_id=userId)
+            test = Test.objects.get(id=testId)
             frame_data = frame.split('data:image/jpeg;base64,')[1]
             img_data = base64.b64decode(frame_data)
-            pred_face_pose_future = executor.submit(predFacePose, img_data, video_id)
-            face_future = executor.submit(analyze_frame, img_data, video_id)
-            phone_future = executor.submit(detect_phone, img_data, video_id)
+            pred_face_pose_future = executor.submit(predFacePose, img_data, video_id,candidate_instance,test)
+            face_future = executor.submit(analyze_frame, img_data, video_id,candidate_instance,test)
+            phone_future = executor.submit(detect_phone, img_data, video_id,candidate_instance,test)
 
             # Wait for the results
             result_face = face_future.result()
@@ -488,18 +494,19 @@ def process_frame(request):
             'result_face': result_face,
             'result_phone': result_phone,
             }
+           
 
             # Process the results if needed
-            #print(f"Face Pose Result: {result_pred_face_pose}")
-            #print(f"Face Analysis Result: {result_face}")
-            #print(f"Phone Detection Result: {result_phone}")
+            print(f"Face Pose Result: {result_pred_face_pose}")
+            print(f"Face Analysis Result: {result_face}")
+            print(f"Phone Detection Result: {result_phone}")
                      
             return JsonResponse(response_data)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
-def analyze_frame(img_data, video_id):
+def analyze_frame(img_data, video_id,candidate_instance,test):
  
         try:
             # Convert to OpenCV image
@@ -512,8 +519,20 @@ def analyze_frame(img_data, video_id):
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
             faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+            if(len(faces)>1):
             
-            return {'video_id': video_id, 'faces_detected': len(faces)}
+                log_entry = MonitoringLog.objects.create(
+                        candidate=candidate_instance,  # Assuming user is logged in
+                        test=test,
+                        activity_type="Faces",
+                        data="Multiple faces detected",  # The file will be automatically saved in the 'monitoring_screenshots' folder
+                        start_time=now(),
+                )
+            
+                return { 'logged':True, 'video_id': video_id, 'logId':log_entry.id}
+            else:
+                return { 'logged':False}
+          
         except Exception as e:
                     
           print(f"Error occurred: {e}")
@@ -522,7 +541,7 @@ def analyze_frame(img_data, video_id):
 
 
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
-def detect_phone(frame_data,video_id):
+def detect_phone(frame_data,video_id,candidate_instance,test):
     # Decode the base64 image
     #img_data = base64.b64decode(frame_data)
     np_arr = np.frombuffer(frame_data, np.uint8)
@@ -547,14 +566,31 @@ def detect_phone(frame_data,video_id):
             'xmax': row['xmax'],  # Bounding box right
             'ymax': row['ymax'],  # Bounding box bottom
         })
+    detection_names = [detection['name'] for detection in detected_objects]
+
+    # Filter out any objects that are not "person"
+    non_person_objects = [name for name in detection_names if name != "person"]
+
+    # Check if there are any objects other than "person"
+    has_other_objects = len(non_person_objects) > 0
         
     # Example: Check for specific objects and print
-    for obj in detected_objects:
-        if obj['name'] == 'cell phone':
-            print(f"Phone detected with confidence: {obj['confidence']:.2f}")
+    if(has_other_objects):
+        
+            log_entry = MonitoringLog.objects.create(
+                        candidate=candidate_instance,  # Assuming user is logged in
+                        test=test,
+                        activity_type="Cheating Object",
+                        data = f"Cheating Object: {non_person_objects}",  # The file will be automatically saved in the 'monitoring_screenshots' folder
+                        start_time=now(),
+                )
+            
+            return { 'logged':True, 'video_id': video_id, 'logId':log_entry.id}
+    else:
+            return { 'logged':False}
     
     # Return all detected objects as JSON response
-    return {'video_id': video_id, 'detections': detected_objects}
+    #return {'video_id': video_id, 'detections': detected_objects}
 
 
 
@@ -580,7 +616,7 @@ def npAngle(a, b, c):
     angle = np.arccos(cosine_angle)
     
     return np.degrees(angle)
-def predFacePose(imgaePath,video_id):
+def predFacePose(imgaePath,video_id,candidate_instance,test):
     with open('output_image.jpg', 'wb') as file:
      file.write(imgaePath)
    
@@ -609,7 +645,7 @@ def predFacePose(imgaePath,video_id):
                     predLabelList.append(predLabel)
                     print(predLabelList)
                     
-                    return predLabelList
+                    return { 'logged':False}
                 else: 
                     if angR < angL and angN >= 40:
                         predLabel = 'Left Profile'
@@ -622,7 +658,22 @@ def predFacePose(imgaePath,video_id):
                     else:
                         predLabel = 'Unknown'
                     predLabelList.append(predLabel)
-                    return predLabelList
+
+                    # Check if 'Frontal' is not in predLabelList
+                    if 'Frontal' not in predLabelList:
+                        
+                        log_entry = MonitoringLog.objects.create(
+                            candidate=candidate_instance,  # Assuming user is logged in
+                            test=test,
+                            activity_type="Cheating Object",
+                            data = f"Cheating Object: {predLabelList}",  # The file will be automatically saved in the 'monitoring_screenshots' folder
+                            start_time=now(),
+                        )
+            
+                        return { 'logged':True, 'video_id': video_id, 'logId':log_entry.id}
+   
+                    else:
+                       return { 'logged':False}
             else:
                 print('The detected face is Less then the detection threshold')
         else:
@@ -642,7 +693,7 @@ def monitoring_log_detail(request, log_id):
     return render(request, 'monitoring_log_detail.html', context)
 @csrf_exempt
 def get_logs(request, test_id):
-    logs = MonitoringLog.objects.filter(test_id=test_id).order_by('timestamp')
+    logs = MonitoringLog.objects.filter(test_id=test_id).order_by('timestamp')[:100]
     logs_data = [
     {
         'candidate': {

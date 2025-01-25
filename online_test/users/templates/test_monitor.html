@@ -94,7 +94,7 @@
     });
         //const videoElement = document.getElementById('videoElement');
         var user=generateRandomString(10);
-        const sessionId='MYSESSIONID000000000000000020'
+        const sessionId="S000"+"{{ test.id|escapejs }}";
         console.log('generated username', user);
     
         // Access the user's webcam
@@ -127,9 +127,13 @@ createToken(sessionId,user).then(response => {
 
             var dataNode = document.createElement('div');
             const parsedData = JSON.parse(event.target.stream.connection.data);
-            const clientData = parsedData.clientData;
+            const clientData = parsedData.username;
+            const userId = parsedData.userId;
+            const testId=parsedData.testId;
             var userData=clientData;
 	        var nodeId=clientData;
+
+            console.log("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",testId)
             
             dataNode.className = "video-name";
             dataNode.id = "data-" + nodeId;
@@ -139,7 +143,7 @@ createToken(sessionId,user).then(response => {
            //capturing frame for analysi
             const videoId = clientData;  // Unique ID for each stream
             setInterval(() => {
-             captureFrame(event.element, videoId);
+             captureFrame(event.element, videoId, userId,testId);
             }, 10000); // 10,000 milliseconds = 10 seconds
             
             
@@ -323,7 +327,7 @@ function updateGridLayout() {
     videoContainer.style.gridTemplateColumns = `repeat(${Math.ceil(Math.sqrt(videos))}, 1fr)`;
 }
 
-function captureFrame(videoElement,videoId) {
+function captureFrame(videoElement,videoId,userId,testId) {
     // Create a canvas to capture the video frame
     console.log('videoElement',videoElement);
     const canvas = document.createElement('canvas');
@@ -337,9 +341,9 @@ function captureFrame(videoElement,videoId) {
     console.log('frame datata front end',frameData);
     
     // Send the frame to Django for analysis
-    sendFrameToServer(frameData, videoId);
+    sendFrameToServer(frameData, videoId,userId,testId);
 }
-async function sendFrameToServer(frameData, videoId) {
+async function sendFrameToServer(frameData, videoId,userId,testId) {
     const csrftoken = getCSRFToken();  
     const response = await fetch(`http://127.0.0.1:8000/video/process_frame/`, {
             method: 'POST',
@@ -347,24 +351,43 @@ async function sendFrameToServer(frameData, videoId) {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrftoken,  // Include CSRF token if required by your backend
             },
-            body: JSON.stringify({ frame: frameData, videoId: videoId }),// Send the participant's username in the body
+            body: JSON.stringify({ frame: frameData, videoId: videoId, userId: userId, testId: testId}),// Send the participant's username in the body
         });
         const data = await response.json();
-        const detectionNames = data.result_phone.detections.map(detection => detection.name);
-       // const hasOtherObjects = detectionNames.some(detection => detection.name !== "person");
-        const nonPersonObjects = detectionNames.filter(detection => detection !== "person");
-        const hasOtherObjects = nonPersonObjects.length > 0;
+        //const detectionNames = data.result_phone.detections.map(detection => detection.name);
+        // const hasOtherObjects = detectionNames.some(detection => detection.name !== "person");
+        //const nonPersonObjects = detectionNames.filter(detection => detection !== "person");
+        //const hasOtherObjects = nonPersonObjects.length > 0;
 
         // append message to chatcontainer
 
       //sendMonitoringLog(userId, testId, type, data, screenshotData) ;
 
 
-        console.log("Contains objects other than 'person':", hasOtherObjects);
-        console.log('response form process frame', data);
-        console.log('result_pred_face_pose:------', data.result_pred_face_pose[0]);
-        console.log('result_face:------', data.result_face.faces_detected);
-        console.log('result_phone:------', nonPersonObjects);
+        //console.log("Contains objects other than 'person':", hasOtherObjects);
+        console.log('response from process frame1', data.result_pred_face_pose.logged);
+        console.log('response from process frame2', data.result_face);
+        console.log('response from process frame3', data.result_phone);
+       // console.log('result_pred_face_pose:------', data.result_pred_face_pose);
+
+        //console.log('result_face:------', data.result_face.logged);
+        //console.log('result_phone:------', nonPersonObjects);
+        if (data.result_pred_face_pose.logged) {
+            console.log("LogID",data.result_pred_face_pose.logId);
+            fetchLog2(data.result_face.logId);
+         } 
+        else if (data.result_face.logged) {
+            console.log("LogID",data.result_face.logId);
+            fetchLog2(data.result_face.logId);
+        }
+        else if (data.result_phone.logged) {
+            console.log("LogID",data.result_phone.logId);
+            fetchLog2(data.result_phone.logId);
+        }
+        else{
+            console.log("unkown state");
+        } 
+             
 }
 
 
@@ -465,6 +488,8 @@ async function fetchLogs(testId) {
             // Append the list item to the div
             messageDiv.appendChild(logElement);
 
+            
+
             const url = `/video/monitoring-log/${log.id}/`;
 
        // console.log(url); 
@@ -478,6 +503,11 @@ async function fetchLogs(testId) {
 
             // Append the div to the chat container
             chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTo({
+                top: chatMessages.scrollHeight, // Use chatMessages.scrollHeight to scroll to the bottom
+                behavior: 'smooth' // Optional: Adds smooth scrolling
+            });
+           
     });
     } catch (error) {
         console.error('Error fetching logs:', error);
@@ -527,6 +557,60 @@ async function fetchLog(logId) {
 
             // Append the div to the chat container
             chatMessages.appendChild(messageDiv);
+
+      
+    } catch (error) {
+        console.error('Error fetching logs:', error);
+    }
+}
+async function fetchLog2(logId) {
+    const chatMessages = document.getElementById('chat-messages');
+    try {
+        // API endpoint to fetch logs
+        const response = await fetch(`http://127.0.0.1:8000/video/get_log/${logId}/`);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch logs: ${response.statusText}`);
+        }
+
+        // Parse the response JSON
+        const data = await response.json();
+        const log=data.logs;
+        console.log('logssss',log);
+        const messageDiv = document.createElement('div');
+            messageDiv.style.padding = '10px';
+            messageDiv.style.marginBottom = '10px';
+            messageDiv.style.backgroundColor = '#f5f5f5';
+            messageDiv.style.borderRadius = '5px';
+            messageDiv.style.border = '1px solid #ddd';
+
+            // Create a list item inside the div
+            const logElement = document.createElement('li');
+            logElement.innerText = `[${log.timestamp}] ${log.candidate.full_name}, ${log.data}`;
+            logElement.style.listStyleType = 'none'; // Optional, removes bullet points
+            logElement.style.margin = '0';
+            logElement.style.padding = '0';
+
+            // Append the list item to the div
+            messageDiv.appendChild(logElement);
+
+            const url = `/video/monitoring-log/${log.id}/`;
+
+       // console.log(url); 
+
+
+        const link = document.createElement('a');
+       // link.href = url; // Set the URL from the fetched data
+        //link.textContent = 'view Screenshot'; // Link text
+       // link.target = '_blank'; // Open in a new tab (optional)// Set a default filename (optional)
+       // messageDiv.appendChild(link);
+
+            // Append the div to the chat container
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTo({
+                top: chatMessages.scrollHeight, // Use chatMessages.scrollHeight to scroll to the bottom
+                behavior: 'smooth' // Optional: Adds smooth scrolling
+            });
 
       
     } catch (error) {
