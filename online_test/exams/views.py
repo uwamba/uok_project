@@ -20,6 +20,18 @@ from .forms import CandidateForm, UserRegistrationForm
 from django.contrib.auth import get_user_model
 from .models import Candidate, Company
 
+from django.http import HttpResponse
+from .forms import ImportQuestionsForm
+from .models import Question, QuestionOption
+from import_export import resources
+from .resources import QuestionResource, QuestionOptionResource
+import openpyxl
+from io import BytesIO
+from openpyxl import load_workbook
+import random
+from faker import Faker
+from datetime import timedelta
+
 
 def test_detail(request, test_id,result_id):
     test = get_object_or_404(Test, id=test_id)
@@ -215,3 +227,125 @@ def candidate_edit(request, candidate_id):
         form = CandidateForm(instance=candidate)
 
     return render(request, 'candidate_edit.html', {'form': form, 'candidate': candidate})
+
+faker = Faker()
+
+def random_test_data(request):
+    # Generate random test data using Faker
+    title = faker.sentence(nb_words=3)  # Random title (e.g., "Math Test")
+    subject = random.choice(Subject.objects.all())  # Randomly choose a subject from existing subjects
+    start_time = faker.date_this_year()  # Random start time in this year
+    end_time = start_time + timedelta(hours=random.randint(1, 3))  # Random end time (between 1 and 3 hours later)
+    total_marks = random.randint(50, 100)  # Random total marks between 50 and 100
+    max_attempts = random.randint(1, 3)  # Random number of attempts between 1 and 3
+    candidates = random.sample(list(Candidate.objects.all()), k=random.randint(1, 5))  # Random candidates
+    duration_type = random.choice([Test.TEST_DURATION, Test.QUESTION_DURATION])  # Randomly choose duration type
+    duration = timedelta(minutes=random.randint(30, 120))  # Random duration between 30 to 120 minutes
+    
+    # Create the Test object with random values
+    test = Test.objects.create(
+        title=title,
+        subject=subject,
+        start_time=start_time,
+        end_time=end_time,
+        total_marks=total_marks,
+        max_attempts=max_attempts,
+        duration=duration,
+        counterType=duration_type,
+         created_by=request.user
+    )
+    
+    # Assign random candidates
+    test.candidates.set(candidates)
+    test.save()
+
+    return test
+
+def import_questions(request):
+    if request.method == 'POST':
+        form = ImportQuestionsForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Open the uploaded Excel file
+            excel_file = request.FILES['file']
+            wb = openpyxl.load_workbook(excel_file)
+            sheet = wb.active
+
+            # Randomize test data
+            test = random_test_data(request)  # Randomize and create test
+
+            for row in sheet.iter_rows(min_row=2, values_only=True):  # Skip header row
+                question_text = row[0]  # Question text
+                marks = row[1]          # Marks
+                question_type = row[2]  # Question type (single, multiple, text)
+
+                # Create the Question object and link it to the random Test
+                question = Question.objects.create(
+                    test=test,
+                    text=question_text,
+                    marks=marks,
+                    question_type=question_type,
+                )
+
+                # Process options and create QuestionOption objects
+                for i in range(3, len(row), 2):  # Start from Option 1, skip every other column
+                    option_text = row[i]
+                    is_correct = row[i+1] == "True"  # Convert "True" to boolean
+
+                    # Check if option_text is not empty before creating the QuestionOption
+                    if option_text:
+                        # Create the QuestionOption object only if option_text is not empty
+                        QuestionOption.objects.create(
+                            question=question,
+                            text=option_text,
+                            is_correct=is_correct
+                        )
+                    else:
+                        # Option text is empty, you could log or handle it differently
+                        print(f"Skipping empty option at row {row[0]}")  # Logging empty option
+                        continue
+
+            return redirect('admin_dashboard')  # Redirect to a page that shows the questions
+    else:
+        form = ImportQuestionsForm()
+
+    return render(request, 'import_questions.html', {'form': form})
+def export_questions(request):
+    # Create an in-memory workbook
+    wb = openpyxl.Workbook()
+    sheet = wb.active
+
+    # Create headers
+    sheet.append([
+        'Question Text', 'Marks', 'Question Type', 
+        'Option 1', 'Is Correct 1', 'Option 2', 'Is Correct 2', 
+        'Option 3', 'Is Correct 3', 'Option 4', 'Is Correct 4'
+    ])
+
+    # Add questions and options
+    questions = Question.objects.all()
+    for question in questions:
+        row = [
+            question.text, question.marks, question.question_type
+        ]
+        
+        # Add options for each question
+        options = question.options.all()
+        for option in options:
+            row.append(option.text)
+            row.append('True' if option.is_correct else 'False')
+        
+        # Ensure there are 4 options (if there are less, add blank ones)
+        while len(row) < 10:  # 4 options * 2 columns (text and is_correct)
+            row.append('')
+        
+        sheet.append(row)
+
+    # Save the file to an HTTP response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="questions.xlsx"'
+
+    # Save the workbook to the response
+    wb.save(response)
+    return response

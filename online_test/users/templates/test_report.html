@@ -1,0 +1,60 @@
+
+{% extends 'base_admin.html' %}
+
+    {% block title %}User Dashboard{% endblock %}
+    
+    {% block content %}
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candidate Log and Result Report</title>
+    <!-- Include Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Candidate Log and Result Report</h2>
+    <div class="container mt-5">
+    
+        <!-- Export Buttons -->
+        <div class="d-flex justify-content-between mb-3">
+            <a href="{% url 'export_results_to_excel' %}" class="btn btn-success btn-sm">Export to Excel</a>
+        </div>
+    
+        <!-- Your table here -->
+    </div>
+
+    <!-- Bootstrap responsive table -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Candidate</th>
+                    <th>Total Marks</th>
+                    <th>Log Count</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in combined_data %}
+                <tr>
+                    <td>{{ forloop.counter }}</td> <!-- Display the number -->
+                    <td>{{ data.candidate.full_name }}</td>
+                    <td>{{ data.total_marks }}</td>
+                    <td>{{ data.log_count }}</td>
+                    <td><a href="{% url 'candidate_log_report' data.candidate.id %}" class="btn btn-info btn-sm">View Details</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+    {% endblock %}
+    
+    
+    
+

@@ -1,0 +1,23 @@
+{% extends 'base_admin.html' %}
+
+{% block title %}Import Export{% endblock %}
+
+{% block content %}
+<div class="section-top-border">
+    <h3 class="mb-30">Import export</h3>
+
+    <div class="container mt-4">
+    
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Import</button>
+    </form>
+
+    <h3>Or Export Questions</h3>
+    <a href="{% url 'export_questions' %}">Download Questions as Excel</a>
+    </div>
+
+</div> 
+{% endblock %}

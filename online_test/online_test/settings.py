@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'django_select2',
     'dal',
     'dal_select2',
+    'import_export',
 ]
 
 MIDDLEWARE = [
@@ -229,3 +230,10 @@ CRISPY_TEMPLATE_PACK = 'bootstrap5'
 # settings.py
 LOGIN_URL = '/user/login/'
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'mail.yoboza.rw'
+EMAIL_PORT = 465
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'test@yoboza.rw'
+EMAIL_HOST_PASSWORD = 'Password@2025'

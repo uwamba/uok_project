@@ -1,0 +1,121 @@
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .report-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+
+        .log-entry {
+            background-color: #fafafa;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .log-entry h4 {
+            color: #007BFF;
+            margin-bottom: 10px;
+            padding-left: 35px; /* Adjusts padding to make space for the circle */
+            position: relative;
+        }
+
+        .log-entry .log-number {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #007BFF;
+            color: white;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .log-entry p {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .screenshot {
+            margin-top: 10px;
+        }
+
+        .screenshot img {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+
+   {% extends 'base_admin.html' %}
+
+    {% block title %}User Dashboard{% endblock %}
+    
+    {% block content %}
+
+    <div class="report-container">
+        <h2>Log Report for {{ candidate.full_name }}</h2>
+        <p><strong>Email:</strong> {{ candidate.user.email }}</p>
+        <div class="mb-3">
+            <a href="{% url 'export_log_report_to_pdf' candidate.id %}" class="btn btn-danger btn-sm">Export to PDF</a>
+        </div>
+
+        <div>
+            {% for log in logs %}
+            
+            <div class="log-entry">
+                <div class="log-number">{{ forloop.counter }}</div> <!-- Circle number -->
+                <h4>Activity Type: {{ log.get_activity_type_display }}</h4>
+                <p><strong>Timestamp:</strong> {{ log.timestamp }}</p>
+                <p><strong>Data:</strong> <pre>{{ log.data }}</pre></p>
+
+                {% if log.screenshot %}
+                <div class="screenshot">
+                    <p><strong>Screenshot:</strong></p>
+                    <img src="{{ log.screenshot.url }}" alt="Screenshot">
+                </div>
+                {% else %}
+                <p><strong>No screenshot available for this log entry.</strong></p>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p>No logs available for this candidate.</p>
+            {% endfor %}
+        </div>
+
+    </div>
+   
+    {% endblock %}
+    
+    
+    

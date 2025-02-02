@@ -22,15 +22,23 @@
             <link href="{% static '/css/themify-icons.css' %}" rel="stylesheet">
             <link href="{% static '/css/slick.css' %}" rel="stylesheet">
             <link href="{% static '/css/nice-select.css' %}" rel="stylesheet">
-            <link href="{% static '/css/style.css' %}" rel="stylesheet">
+           
 
             <link rel="stylesheet" type="text/css" href="{% static 'admin/css/widgets.css' %}">
             <script type="text/javascript" src="{% static 'admin/js/core.js' %}"></script>
             <script type="text/javascript" src="{% static 'admin/js/admin/RelatedObjectLookup.js' %}"></script>
             <script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
             <script type="text/javascript" src="{% static 'admin/js/actions.js' %}"></script>
+<!-- Add this to the <head> section of your HTML -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
             <style>
+              .list-group-item.active {
+                background-color: #f0f0f0;
+                color: #007bff;  /* Active color for text */
+                border-left: 3px solid #007bff;  /* Optional: Add a highlight border */
+              }
+
               .candidate-container {
                   width: 300px;
                   margin-top: 10px;
@@ -55,86 +63,86 @@
                   border: 1px solid #ccc;
               }
               /* Floating Chat Container Styles */
-#chat-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 400px;
-    height: 400px;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-    display: none; /* Initially hidden */
-    flex-direction: column;
-    z-index: 9999;
-    overflow-y: auto;
-}
+            #chat-container {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                width: 400px;
+                height: 400px;
+                background-color: #fff;
+                border: 1px solid #ccc;
+                border-radius: 10px;
+                box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+                display: none; /* Initially hidden */
+                flex-direction: column;
+                z-index: 9999;
+                overflow-y: auto;
+            }
 
-#chat-header {
-    background-color: #007bff;
-    color: #fff;
-    padding: 10px;
-    text-align: center;
-    border-radius: 10px 10px 0 0;
-}
+            #chat-header {
+                background-color: #007bff;
+                color: #fff;
+                padding: 10px;
+                text-align: center;
+                border-radius: 10px 10px 0 0;
+            }
 
-#chat-body {
-    padding: 10px;
-    overflow-y: auto;
-    flex-grow: 1;
-}
+            #chat-body {
+                padding: 10px;
+                overflow-y: auto;
+                flex-grow: 1;
+            }
 
-#chat-input {
-    display: flex;
-    padding: 10px;
-    background-color: #f1f1f1;
-    border-radius: 0 0 10px 10px;
-}
+            #chat-input {
+                display: flex;
+                padding: 10px;
+                background-color: #f1f1f1;
+                border-radius: 0 0 10px 10px;
+            }
 
-#chat-input input {
-    flex-grow: 1;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    margin-right: 10px;
-}
+            #chat-input input {
+                flex-grow: 1;
+                padding: 10px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                margin-right: 10px;
+            }
 
-#chat-input button {
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
+            #chat-input button {
+                padding: 10px;
+                background-color: #007bff;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+            }
 
-#chat-input button:hover {
-    background-color: #0056b3;
-}
+            #chat-input button:hover {
+                background-color: #0056b3;
+            }
 
-/* Open Chat Button */
-#open-chat {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background-color: #007bff;
-    color: white;
-    padding: 15px;
-    border-radius: 50%;
-    font-size: 24px;
-    cursor: pointer;
-    z-index: 9999;
-}
+            /* Open Chat Button */
+            #open-chat {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background-color: #007bff;
+                color: white;
+                padding: 15px;
+                border-radius: 50%;
+                font-size: 24px;
+                cursor: pointer;
+                z-index: 9999;
+            }
 
-#open-chat:hover {
-    background-color: #0056b3;
-}
-#chat-messages {
-    height: 300px; /* Set a height to make it scrollable */
-    overflow-y: auto; 
-    background-color:rgb(22, 180, 93);
-}
+            #open-chat:hover {
+                background-color: #0056b3;
+            }
+            #chat-messages {
+                height: 300px; /* Set a height to make it scrollable */
+                overflow-y: auto; 
+                background-color:rgb(22, 180, 93);
+            }
 
           </style>
           
@@ -161,42 +169,104 @@
                 <div class="col-lg-3 col-md-3">
                     <!--Main Navigation-->
                   <!-- Sidebar -->
-                  <nav id="sidebarMenu" class="collapse d-lg-block sidebar collapse bg-white" style="position: fixed;top: 0;bottom: 0;left: 0;padding: 58px 0 0; /* Height of navbar */box-shadow: 0 2px 5px 0 rgb(0 0 0 / 5%), 0 2px 10px 0 rgb(0 0 0 / 5%);width: 240px;z-index: 600;}">
+                  <nav id="sidebarMenu" class="collapse d-lg-block sidebar bg-white" style="position: fixed; top: 0; bottom: 0; left: 0; padding: 58px 0 0; box-shadow: 0 2px 5px 0 rgb(0 0 0 / 5%), 0 2px 10px 0 rgb(0 0 0 / 5%); width: 240px; z-index: 600;">
                     <div class="position-sticky">
-                      <div class="list-group list-group-flush mx-3 mt-4">
-                        <a href="#" class="list-group-item list-group-item-action py-2 ripple" aria-current="true">
-                          <i class="fas fa-tachometer-alt fa-fw me-3"></i><span>Main dashboard</span>
-                        </a>
-                        <a href="{% url 'create_subject' %}" class="list-group-item list-group-item-action py-2 ripple active">Create New Subject</a>
-                  
-                        <a href="#" class="list-group-item list-group-item-action py-2 ripple active">
-                          <i class="fas fa-chart-area fa-fw me-3"></i><span>Tests</span>
-                        </a>
-                        <a href="{% url 'add_test' %}" class="list-group-item list-group-item-action py-2 ripple active">
-                          <i class="fas fa-chart-area fa-fw me-3"></i><span>Create Tests</span>
-                        </a>
-                        <a href="{% url 'create_question' %}" class="list-group-item list-group-item-action py-2 ripple active">
-                          <i class="fas fa-chart-area fa-fw me-3"></i><span>Create Question</span>
-                        </a>
-                       
-                        <a href="#" class="list-group-item list-group-item-action py-2 ripple active">
-                          <i class="fas fa-chart-area fa-fw me-3"></i><span>Results</span>
-                        </a>
-                        <a href="{% url 'register_candidate' %}" class="list-group-item list-group-item-action py-2 ripple active">
-                          <i class="fas fa-chart-area fa-fw me-3"></i><span>Add new Candidate</span>
-                        </a>
-                        <a href="{% url 'list_candidates' %}" class="list-group-item list-group-item-action py-2 ripple active">
-                          <i class="fas fa-chart-area fa-fw me-3"></i><span>Candidate List</span>
-                        </a>
-                        <a href="#" class="list-group-item list-group-item-action py-2 ripple"><i
-                            class="fas fa-chart-line fa-fw me-3"></i><span>Change Password</span></a>
-                        <a href="#" class="list-group-item list-group-item-action py-2 ripple">
-                          <i class="fas fa-chart-pie fa-fw me-3"></i><span>Help</span>
-                        </a>
-                          <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
-                      </div>
+                        <div class="list-group list-group-flush mx-3 mt-4">
+                            <!-- Tests Link -->
+                            <a href="{% url 'admin_dashboard' %}" class="list-group-item list-group-item-action py-2 ripple">
+                              <i class="fas fa-list fa-fw me-3"></i>
+                                <span>Dashboard</span>
+                            </a>
+                            <!-- Create New Subject Link -->
+                            <a href="{% url 'create_subject' %}" class="list-group-item list-group-item-action py-2 ripple">
+                                <i class="fas fa-plus-circle fa-fw me-3"></i>
+                                <span>Create New Subject</span>
+                            </a>
+                
+                           
+                
+                            <!-- Test Results Link -->
+                            <a href="{% url 'admin_test_result' %}" class="list-group-item list-group-item-action py-2 ripple">
+                              <i class="fas fa-list fa-fw me-3"></i>
+                                <span>Tests Result</span>
+                            </a>
+                
+                            <!-- Create Test Link -->
+                            <a href="{% url 'add_test' %}" class="list-group-item list-group-item-action py-2 ripple">
+                              <i class="fas fa-plus-circle fa-fw me-3"></i>
+                                <span>Create Test</span>
+                            </a>
+                
+                            <!-- Import Test and Questions Link -->
+                            <a href="{% url 'import_questions' %}" class="list-group-item list-group-item-action py-2 ripple">
+                      
+                            <span class="me-3">
+                                <i class="fas fa-file-export fa-fw"></i>
+                            </span>
+                                <span>Import Test and Questions</span>
+                            </a>
+                
+                            <!-- Add New Candidate Link -->
+                            <a href="{% url 'register_candidate' %}" class="list-group-item list-group-item-action py-2 ripple">
+                                <i class="fas fa-user-plus fa-fw me-3"></i>
+                                <span>Add New Candidate</span>
+                            </a>
+                
+                            <!-- Candidate List Link -->
+                            <a href="{% url 'list_candidates' %}" class="list-group-item list-group-item-action py-2 ripple">
+                                <i class="fas fa-users fa-fw me-3"></i>
+                                <span>Candidate List</span>
+                            </a>
+                
+                            <!-- Change Password Link -->
+                            <a href="{% url 'password_change' %}" class="list-group-item list-group-item-action py-2 ripple">
+                                <i class="fas fa-key fa-fw me-3"></i>
+                                <span>Change Password</span>
+                            </a>
+                
+                            <!-- Help Link -->
+                            <a href="#" class="list-group-item list-group-item-action py-2 ripple">
+                                <i class="fas fa-question-circle fa-fw me-3"></i>
+                                <span>Help</span>
+                            </a>
+                
+                            <!-- Logout Link -->
+                            <a class="dropdown-item" href="{% url 'logout' %}">
+                                <i class="fas fa-sign-out-alt fa-fw me-3"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
                     </div>
-                  </nav>
+                </nav>
+                
+                <script>
+                  document.addEventListener('DOMContentLoaded', function () {
+                    // Get all sidebar links
+                    const sidebarLinks = document.querySelectorAll('.list-group-item');
+                
+                    // Loop through each link and add an event listener
+                    sidebarLinks.forEach(link => {
+                      link.addEventListener('click', function () {
+                        // Remove 'active' class from all links
+                        sidebarLinks.forEach(link => link.classList.remove('active'));
+                
+                        // Add 'active' class to the clicked link
+                        this.classList.add('active');
+                      });
+                    });
+                
+                    // Optional: If you want to set the active class based on the current URL (initial page load)
+                    const currentUrl = window.location.pathname;
+                    sidebarLinks.forEach(link => {
+                      if (link.getAttribute('href') === currentUrl) {
+                        link.classList.add('active');
+                      }
+                    });
+                  });
+                </script>
+                
+                
+                
                   <!-- Sidebar -->
                 
                   <!-- Navbar -->
@@ -211,8 +281,7 @@
                 
                       <!-- Brand -->
                       <a class="navbar-brand" href="#">
-                        <img src="https://mdbcdn.b-cdn.net/img/logo/mdb-transaprent-noshadows.webp" height="25" alt="MDB Logo"
-                          loading="lazy" />
+                       Reading Technology
                       </a>
                       <!-- Search form -->
                       <form class="d-none d-md-flex input-group w-auto my-auto">
@@ -285,4 +354,5 @@
         <script src="{% static '/js/main.js' %}"></script>
         
     </body>
+  
 </html>

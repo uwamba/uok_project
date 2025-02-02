@@ -9,6 +9,7 @@ from django.urls import path, reverse
 from django.shortcuts import render, get_object_or_404
 from .models import Test
 from videos.models import MonitoringLog
+from import_export.admin import ExportMixin, ImportMixin
 # Register your models here.
 
 class QuestionOptionInline(admin.TabularInline):
@@ -16,7 +17,7 @@ class QuestionOptionInline(admin.TabularInline):
     extra = 1 # Allow 3 options to be added initially
     fields = ['text', 'is_correct']
 
-class QuestionAdmin(admin.ModelAdmin):
+class QuestionAdmin(ImportMixin, ExportMixin,admin.ModelAdmin):
     list_display = ['text', 'question_type', 'marks']
     list_filter = ['question_type','test']
     inlines = [QuestionOptionInline]
@@ -24,7 +25,7 @@ class QuestionAdmin(admin.ModelAdmin):
 
 
 # Custom admin class for the Test model
-class TestAdmin(admin.ModelAdmin):
+class TestAdmin(ImportMixin, ExportMixin,admin.ModelAdmin):
     list_display = ('title', 'start_time','end_time', 'total_marks','duration','counterType','created_by')
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -41,7 +42,6 @@ class TestAdmin(admin.ModelAdmin):
         if obj is not None and obj.created_by == request.user:
             return True
         return super().has_delete_permission(request, obj)
-
 admin.site.register(Test, TestAdmin)
    
 

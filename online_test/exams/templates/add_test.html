@@ -1,57 +1,58 @@
 {% extends "base_admin.html" %}
 {% block content %}
-
-<h1>Add New Test, Questions, and Options</h1>
-
-<form method="post">
+<form method="post" class="container mt-5 p-4 bg-white shadow rounded">
     {% csrf_token %}
 
     <!-- Test Details -->
-    <h2>Test Details</h2>
-    <label>Title:</label>
-    <input type="text" name="test_title" required><br>
+    <h2 class="h4 mb-4">Test Details</h2>
+    
+    <label class="form-label">Title:</label>
+    <input type="text" name="test_title" required class="form-control mb-3">
 
-    <label>Subject:</label>
-    <select name="subject" required>
-        {% for subject in subjects %}
-        <option value="{{ subject.id }}">{{ subject.name }}</option>
-        {% endfor %}
-    </select><br>
-
-    <label>Start Time:</label>
-    <input type="datetime-local" name="start_time" required><br>
-
-    <label>End Time:</label>
-    <input type="datetime-local" name="end_time" required><br>
-
-    <label>Total Marks:</label>
-    <input type="number" name="total_marks" required><br>
-
-    <label>Max Attempts:</label>
-    <input type="number" name="max_attempts" required><br>
-
-    <label>Duration (in minutes):</label>
-    <input type="number" name="duration" required><br>
-
-    <label>Candidates:</label><br>
-    <div class="candidate-container">
-        <input type="text" id="candidateSearch" placeholder="Search Candidates..." onkeyup="filterCandidates()">
-        <div class="scrollable-container" id="candidateList">
-            {% for candidate in candidates %}
-            <div class="candidate-item">
-                <input type="checkbox" name="candidates" value="{{ candidate.id }}">
-                <label>{{ candidate.full_name }}</label>
-            </div>
+    <label class="form-label">Subject:</label>
+    <div class="dropdown">
+        <select name="subject" required class="form-select mb-3">
+            {% for subject in subjects %}
+            <option value="{{ subject.id }}">{{ subject.name }}</option>
             {% endfor %}
+        </select>
+    </div>
+
+    <label class="form-label">Start Time:</label>
+    <input type="datetime-local" name="start_time" required class="form-control mb-3">
+
+    <label class="form-label">End Time:</label>
+    <input type="datetime-local" name="end_time" required class="form-control mb-3">
+
+    <label class="form-label">Total Marks:</label>
+    <input type="number" name="total_marks" required class="form-control mb-3">
+
+    <label class="form-label">Max Attempts:</label>
+    <input type="number" name="max_attempts" required class="form-control mb-3">
+
+    <label class="form-label">Duration (in minutes):</label>
+    <input type="number" name="duration" required class="form-control mb-3">
+
+    <!-- Candidates Section -->
+    <label class="form-label">Candidates:</label>
+    <input type="text" id="candidateSearch" placeholder="Search Candidates..." onkeyup="filterCandidates()" class="form-control mb-2">
+ 
+    <div class="border p-2 rounded overflow-auto" id="candidateList" style="max-height: 200px;">
+        {% for candidate in candidates %}
+        <div class="candidate-item">
+            <input type="checkbox" name="candidates" value="{{ candidate.id }}">
+            <label>{{ candidate.full_name }}</label>
         </div>
+        
+        {% endfor %}
     </div>
 
     <!-- Questions Section -->
-    <h2>Questions</h2>
-    <div id="questions-container"></div>
-    <button type="button" onclick="addQuestion()">Add Question</button>
-
-    <button type="submit">Save Test</button>
+    <h2 class="h4 mt-4 mb-3">Questions</h2>
+    <div id="questions-container" class="mb-3"></div>
+    <button type="button" onclick="addQuestion()" class="btn btn-primary">Add Question</button>
+    
+    <button type="submit" class="btn btn-success w-100 mt-3">Save Test</button>
 </form>
 <script>
     function filterCandidates() {
@@ -78,62 +79,70 @@
     
    let questionCount = 0;
 
-function addQuestion() {
-    const questionsContainer = document.getElementById('questions-container');
+   function addQuestion() {
+        const questionsContainer = document.getElementById('questions-container');
 
-    const questionHTML = `
-        <div class="question-block" id="question-${questionCount}">
-            <h3>Question ${questionCount + 1}</h3>
-            <label>Text:</label>
-            <input type="text" name="question_text" required><br>
+        const questionHTML = `
+            <div class="border p-3 rounded mb-3" id="question-${questionCount}">
+                <h5>Question ${questionCount + 1}</h5>
+                <label class="form-label">Text:</label>
+                <input type="text" name="question_text" required class="form-control mb-2">
 
-            <label>Marks:</label>
-            <input type="number" name="question_marks" required><br>
+                <label class="form-label">Marks:</label>
+                <input type="number" name="question_marks" required class="form-control mb-2">
 
-            <label>Type:</label>
-            <select name="question_type" onchange="handleQuestionTypeChange(${questionCount}, this.value)" required>
-                <option value="single">Single Answer</option>
-                <option value="multiple">Multiple Answers</option>
-                <option value="text">Text Answer</option>
-            </select><br>
+                <label class="form-label">Type:</label>
+                <select name="question_type" onchange="handleQuestionTypeChange(${questionCount}, this.value)" required class="form-select mb-2">
+                    <option value="single">Single Answer</option>
+                    <option value="multiple">Multiple Answers</option>
+                    <option value="text">Text Answer</option>
+                </select>
 
-            <!-- Options Section -->
-            <div id="options-section-${questionCount}">
-                <h4>Options</h4>
-                <div id="options-container-${questionCount}"></div>
-                <button type="button" onclick="addOption(${questionCount})">Add Option</button>
+                <!-- Options Section -->
+                <div id="options-section-${questionCount}">
+                    <h6>Options</h6>
+                    <div id="options-container-${questionCount}"></div>
+                    <button type="button" onclick="addOption(${questionCount})" class="btn btn-secondary btn-sm mt-2">Add Option</button>
+                </div>
+
+                <!-- Answer Text Section (hidden by default) -->
+                <div id="answer-text-section-${questionCount}" style="display: none;">
+                    <label class="form-label">Answer Text:</label>
+                    <input type="text" name="answer_text_${questionCount}" class="form-control mb-2">
+                </div>
+                <button type="button" onclick="removeQuestion(${questionCount})" class="btn btn-danger btn-sm mt-2">Remove Question</button>
             </div>
+            
+        `;
 
-            <!-- Answer Text Section (hidden by default) -->
-            <div id="answer-text-section-${questionCount}" style="display: none;">
-                <label>Answer Text:</label>
-                <input type="text" name="answer_text_${questionCount}"><br>
+        questionsContainer.insertAdjacentHTML('beforeend', questionHTML);
+        questionCount++;
+    }
+
+    function removeQuestion(index) {
+        document.getElementById(`question-${index}`).remove();
+    }
+
+    function addOption(questionIndex) {
+        const optionsContainer = document.getElementById(`options-container-${questionIndex}`);
+
+        const optionHTML = `
+            <div class="input-group mb-2 gap-2" id="option-${questionIndex}-${optionsContainer.children.length}">
+                <input type="text" name="option_text_${questionIndex}" required class="form-control" placeholder="Option Text">
+                <div class="input-group-text d-flex align-items-center gap-2">
+                    <input type="checkbox" name="is_correct_${questionIndex}" value="${optionsContainer.children.length}" class="form-check-input">
+                    <label class="form-check-label">Correct</label>
+                </div>
+                <button type="button" onclick="removeOption(${questionIndex}, ${optionsContainer.children.length})" class="btn btn-danger btn-sm">Remove</button>
             </div>
+        `;
 
-            <hr>
-        </div>
-    `;
+        optionsContainer.insertAdjacentHTML('beforeend', optionHTML);
+    }
 
-    questionsContainer.insertAdjacentHTML('beforeend', questionHTML);
-    questionCount++;
-}
-
-function addOption(questionIndex) {
-    const optionsContainer = document.getElementById(`options-container-${questionIndex}`);
-
-    const optionHTML = `
-        <div class="option-block">
-            <label>Option Text:</label>
-            <input type="text" name="option_text_${questionIndex}" required>
-            <label>Correct:</label>
-            <input type="checkbox" name="is_correct_${questionIndex}" value="${optionsContainer.children.length}">
-            <br>
-        </div>
-    `;
-
-    optionsContainer.insertAdjacentHTML('beforeend', optionHTML);
-}
-
+    function removeOption(questionIndex, optionIndex) {
+        document.getElementById(`option-${questionIndex}-${optionIndex}`).remove();
+    }
 function handleQuestionTypeChange(questionIndex, questionType) {
     const optionsSection = document.getElementById(`options-section-${questionIndex}`);
     const answerTextSection = document.getElementById(`answer-text-section-${questionIndex}`);

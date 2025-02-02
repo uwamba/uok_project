@@ -13,5 +13,7 @@ urlpatterns = [
     path('candidates/', views.list_candidates, name='list_candidates'),
     path('candidate/<int:candidate_id>/detail/', views.candidate_detail, name='candidate_detail'),
     path('candidate/<int:candidate_id>/edit/', views.candidate_edit, name='candidate_edit'),
+    path('import/', views.import_questions, name='import_questions'),
+    path('export/', views.export_questions, name='export_questions'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

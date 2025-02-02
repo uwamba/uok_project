@@ -7,6 +7,8 @@ from django.forms import inlineformset_factory
 from .models import Test, Question, QuestionOption, Candidate
 from django_select2.forms import Select2Widget # type: ignore
 from dal import autocomplete
+from django.core.exceptions import ValidationError
+
 
 
 # Form for Test
@@ -79,3 +81,12 @@ class CandidateForm(forms.ModelForm):
     class Meta:
         model = Candidate
         fields = ['full_name', 'phone_number', 'date_of_birth', 'access_start_time', 'access_end_time']
+        
+class ImportQuestionsForm(forms.Form):
+    file = forms.FileField()
+
+    def clean_file(self):
+        file = self.cleaned_data.get('file')
+        if not file.name.endswith('.xlsx'):
+            raise ValidationError("Only Excel (.xlsx) files are allowed.")
+        return file

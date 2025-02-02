@@ -1,395 +1,218 @@
-{% load static %}
-<!doctype html>
-<html class="no-js" lang="zxx">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <title>App Landing Template </title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="manifest" href="site.webmanifest">
-		<link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.ico">
-
-		<!-- CSS here -->
-            <link href="{% static '/css/bootstrap.min.css' %}" rel="stylesheet">
-            <link href="{% static '/css/owl.carousel.min.css' %}" rel="stylesheet">
-            <link href="{% static '/css/flaticon.css' %}" rel="stylesheet">
-            <link href="{% static '/css/slicknav.css' %}" rel="stylesheet">
-            <link href="{% static '/css/animate.min.css' %}" rel="stylesheet">
-            <link href="{% static '/css/magnific-popup.css' %}" rel="stylesheet">
-            <link href="{% static '/css/fontawesome-all.min.css' %}" rel="stylesheet">
-            <link href="{% static '/css/themify-icons.css' %}" rel="stylesheet">
-            <link href="{% static '/css/slick.css' %}" rel="stylesheet">
-            <link href="{% static '/css/nice-select.css' %}" rel="stylesheet">
-            <link href="{% static '/css/style.css' %}" rel="stylesheet">
-
-   </head>
-
-   <body>
-       
-    <!-- Preloader Start -->
-    <div id="preloader-active">
-        <div class="preloader d-flex align-items-center justify-content-center">
-            <div class="preloader-inner position-relative">
-                <div class="preloader-circle"></div>
-                <div class="preloader-img pere-text">
-                   
-                </div>
-            </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Testing Center</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.10.3/cdn.min.js" defer></script>
+</head>
+<body class="font-sans antialiased">
+    <header class="bg-blue-600 text-white p-4 fixed top-0 w-full z-50 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Online Testing Center</h1>
+            <nav>
+                <ul class="flex space-x-4">
+                    <li><a href="#home" class="hover:text-gray-200">Home</a></li>
+                    <li><a href="#about" class="hover:text-gray-200">About</a></li>
+                    <li><a href="#services" class="hover:text-gray-200">Services</a></li>
+                </ul>
+            </nav>
+            <a href="{% url 'login' %}" class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-gray-100">Login</a>
         </div>
-    </div>
-    <!-- Preloader Start -->
-
-    <header>
-        <!-- Header Start -->
-       <div class="header-area header-transparrent ">
-            <div class="main-header header-sticky">
-                <div class="container">
-                    <div class="row align-items-center">
-                        <!-- Logo -->
-                        <div class="col-xl-2 col-lg-2 col-md-2">
-                            <div class="logo">
-                                
-                            </div>
-                        </div>
-                        <div class="col-xl-10 col-lg-10 col-md-10">
-                            <!-- Main-menu -->
-                            <div class="main-menu f-right d-none d-lg-block">
-                                <nav>
-                                    <ul id="navigation">    
-                                        <li class="active"><a href="index.html"> Home</a></li>
-                                        <li><a href="feature.html">Feature</a></li>
-                                        <li><a href="services.html">Services</a></li>
-                                        <li><a href="pricing.html">Pricing</a></li>
-                                        <li><a href="#">Pages</a>
-                                            <ul class="submenu">
-                                                <li><a href="blog.html">Blog</a></li>
-                                                <li><a href="single-blog.html">Blog Details</a></li>
-                                                <li><a href="elements.html">Element</a></li>
-                                            </ul>
-                                        </li>
-                                        <li><a href="contact.html">Contact</a></li>
-                                        <li><a href="{% url 'login' %}">Login</a></li>
-                                    </ul>
-                                </nav>
-                            </div>
-                        </div>
-                        <!-- Mobile Menu -->
-                        <div class="col-12">
-                            <div class="mobile_menu d-block d-lg-none"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-       </div>
-        <!-- Header End -->
     </header>
+    
 
-    <main>
-
-        <!-- Slider Area Start-->
-        <div class="slider-area ">
-            <div class="slider-active">
-                <div class="single-slider slider-height slider-padding sky-blue d-flex align-items-center">
-                    <div class="container">
-                        <div class="row d-flex align-items-center">
-                            <div class="col-lg-6 col-md-9 ">
-                                <div class="hero__caption">
-                                    <span data-animation="fadeInUp" data-delay=".4s">App Landing Page</span>
-                                    <h1 data-animation="fadeInUp" data-delay=".6s">Get things done<br>with Appco</h1>
-                                    <p data-animation="fadeInUp" data-delay=".8s">Dorem ipsum dolor sitamet, consectetur adipiscing elit, sed do eiusm tempor incididunt ulabore et dolore magna aliqua.</p>
-                                    <!-- Slider btn -->
-                                   <div class="slider-btns">
-                                        <!-- Hero-btn -->
-                                        <a data-animation="fadeInLeft" data-delay="1.0s" href="industries.html" class="btn radius-btn">Download</a>
-                                        <!-- Video Btn -->
-                                        <a data-animation="fadeInRight" data-delay="1.0s" class="popup-video video-btn ani-btn" href="https://www.youtube.com/watch?v=1aP-TXUpNoU"><i class="fas fa-play"></i></a>
-                                   </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="hero__img d-none d-lg-block f-right" data-animation="fadeInRight" data-delay="1s">
-                                    <img src="{% static '/img/hero/hero_right.png' %}" alt="">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div> 
-                <div class="single-slider slider-height slider-padding sky-blue d-flex align-items-center">
-                    <div class="container">
-                        <div class="row d-flex align-items-center">
-                            <div class="col-lg-6 col-md-9 ">
-                                <div class="hero__caption">
-                                    <span data-animation="fadeInUp" data-delay=".4s">App Landing Page</span>
-                                    <h1 data-animation="fadeInUp" data-delay=".6s">Get things done<br>with Appco</h1>
-                                    <p data-animation="fadeInUp" data-delay=".8s">Dorem ipsum dolor sitamet, consectetur adipiscing elit, sed do eiusm tempor incididunt ulabore et dolore magna aliqua.</p>
-                                    <!-- Slider btn -->
-                                   <div class="slider-btns">
-                                        <!-- Hero-btn -->
-                                        <a data-animation="fadeInLeft" data-delay="1.0s" href="industries.html" class="btn radius-btn">Download</a>
-                                        <!-- Video Btn -->
-                                        <a data-animation="fadeInRight" data-delay="1.0s" class="popup-video video-btn ani-btn" href="https://www.youtube.com/watch?v=1aP-TXUpNoU"><i class="fas fa-play"></i></a>
-                                   </div>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="hero__img d-none d-lg-block f-right" data-animation="fadeInRight" data-delay="1s">
-                                    <img src="{% static '/img/hero/hero_right.png' %}" alt="">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div> 
-            </div>
-        </div>
-        <!-- Slider Area End -->
-        <!-- Best Features Start -->
-        <section class="best-features-area section-padd4">
-            <div class="container">
-                <div class="row justify-content-end">
-                    <div class="col-xl-8 col-lg-10">
-                        <!-- Section Tittle -->
-                        <div class="row">
-                            <div class="col-lg-10 col-md-10">
-                                <div class="section-tittle">
-                                    <h2>Some of the best features Of Our App!</h2>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Section caption -->
-                        <div class="row">
-                            <div class="col-xl-6 col-lg-6 col-md-6">
-                                <div class="single-features mb-70">
-                                    <div class="features-icon">
-                                        <span class="flaticon-support"></span>
-                                    </div>
-                                    <div class="features-caption">
-                                        <h3>Easy to Costomize</h3>
-                                        <p>Aorem psum olorsit amet ectetur adipiscing elit, sed dov.</p>
-                                    </div>
-                                </div>
-                            </div>
-                             <div class="col-xl-6 col-lg-6 col-md-6">
-                                <div class="single-features mb-70">
-                                    <div class="features-icon">
-                                        <span class="flaticon-support"></span>
-                                    </div>
-                                    <div class="features-caption">
-                                        <h3>Extreme Security</h3>
-                                        <p>Aorem psum olorsit amet ectetur adipiscing elit, sed dov.</p>
-                                    </div>
-                                </div>
-                            </div> 
-                            <div class="col-xl-6 col-lg-6 col-md-6">
-                                <div class="single-features mb-70">
-                                    <div class="features-icon">
-                                        <span class="flaticon-support"></span>
-                                    </div>
-                                    <div class="features-caption">
-                                        <h3>Customer Support</h3>
-                                        <p>Aorem psum olorsit amet ectetur adipiscing elit, sed dov.</p>
-                                    </div>
-                                </div>
-                            </div>
-                             <div class="col-xl-6 col-lg-6 col-md-6">
-                                <div class="single-features mb-70">
-                                    <div class="features-icon">
-                                        <span class="flaticon-support"></span>
-                                    </div>
-                                    <div class="features-caption">
-                                        <h3>Creative Design</h3>
-                                        <p>Aorem psum olorsit amet ectetur adipiscing elit, sed dov.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Shpe -->
-            <div class="features-shpae d-none d-lg-block">
-                <img src="{% static '/img/shape/best-features.png' %}" alt="">
-            </div>
-        </section>
-        <!-- Best Features End -->
-        <!-- Services Area Start -->
-        <section class="service-area sky-blue section-padding2">
-            <div class="container">
-                <!-- Section Tittle -->
-                <div class="row d-flex justify-content-center">
-                    <div class="col-lg-6">
-                        <div class="section-tittle text-center">
-                            <h2>How Can We HelpYour<br>with Appco!</h2>
-                        </div>
-                    </div>
-                </div>
-                <!-- Section caption -->
-                <div class="row">
-                    <div class="col-xl-4 col-lg-4 col-md-6">
-                        <div class="services-caption text-center mb-30">
-                            <div class="service-icon">
-                                <span class="flaticon-businessman"></span>
-                            </div> 
-                            <div class="service-cap">
-                                <h4><a href="#">Easily Manage</a></h4>
-                                <p>Sorem spsum dolor sit amsectetur adipisclit, seddo eiusmod tempor incididunt ut laborea.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-xl-4 col-lg-4 col-md-6">
-                        <div class="services-caption active text-center mb-30">
-                            <div class="service-icon">
-                                <span class="flaticon-pay"></span>
-                            </div> 
-                            <div class="service-cap">
-                                <h4><a href="#">Get Payments Easily</a></h4>
-                                <p>Sorem spsum dolor sit amsectetur adipisclit, seddo eiusmod tempor incididunt ut laborea.</p>
-                            </div>
-                        </div>
-                    </div> 
-                    <div class="col-xl-4 col-lg-4 col-md-6">
-                        <div class="services-caption text-center mb-30">
-                            <div class="service-icon">
-                                <span class="flaticon-plane"></span>
-                            </div> 
-                            <div class="service-cap">
-                                <h4><a href="#">Quick Messaging</a></h4>
-                                <p>Sorem spsum dolor sit amsectetur adipisclit, seddo eiusmod tempor incididunt ut laborea.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <!-- Services Area End -->
-        <!-- Applic App Start -->
-        
-     
-    </main>
-   <footer>
-
-       <!-- Footer Start-->
-      <div class="footer-main">
-        <div class="footer-area footer-padding">
-            <div class="container">
-                <div class="row  justify-content-between">
-                    <div class="col-lg-3 col-md-4 col-sm-8">
-                         <div class="single-footer-caption mb-30">
-                              <!-- logo -->
-                             
-                             <div class="footer-tittle">
-                                 <div class="footer-pera">
-                                     <p class="info1">Lorem ipsum dolor sit amet, consectetur adipisicing elit sed do eiusmod tempor incididunt ut labore.</p>
-                                </div>
-                             </div>
-                         </div>
-                    </div>
-                    <div class="col-lg-2 col-md-4 col-sm-5">
-                        <div class="single-footer-caption mb-50">
-                            <div class="footer-tittle">
-                                <h4>Quick Links</h4>
-                                <ul>
-                                    <li><a href="#">About</a></li>
-                                    <li><a href="#">Features</a></li>
-                                    <li><a href="#">Pricing</a></li>
-                                    <li><a href="#">Download</a></li>
-                                    <li><a href="#">Reviews</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-2 col-md-4 col-sm-7">
-                        <div class="single-footer-caption mb-50">
-                            <div class="footer-tittle">
-                                <h4>Support</h4>
-                                <ul>
-                                    <li><a href="#">Report a bug</a></li>
-                                    <li><a href="#">Privacy Policy</a></li>
-                                    <li><a href="#">Terms & Conditions</a></li>
-                                    <li><a href="#">Sitemap</a></li>
-                                    <li><a href="#">FAQs</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-md-6 col-sm-8">
-                        <div class="single-footer-caption mb-50">
-                            <div class="footer-tittle">
-                                <h4>Newsletter</h4>
-                                <div class="footer-pera footer-pera2">
-                                 <p>Heaven fruitful doesn't over lesser in days. Appear </p>
-                             </div>
-                             <!-- Form -->
-                             <div class="footer-form">
-                                 <div id="mc_embed_signup">
-                                     <form target="_blank" action="https://spondonit.us12.list-manage.com/subscribe/post?u=1462626880ade1ac87bd9c93a&amp;id=92a4423d01" method="get" class="subscribe_form relative mail_part" novalidate="true">
-                                         <input type="email" name="EMAIL" id="newsletter-form-email" placeholder=" Email Address " class="placeholder hide-on-focus" onfocus="this.placeholder = ''" onblur="this.placeholder = ' Email Address '">
-                                         <div class="form-icon">
-                                             <button type="submit" name="submit" id="newsletter-submit" class="email_icon newsletter-submit button-contactForm"></button>
-                                         </div>
-                                         <div class="mt-10 info"></div>
-                                     </form>
-                                 </div>
-                             </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Copy-Right -->
-                <div class="row align-items-center">
-                    <div class="col-xl-12 ">
-                        <div class="footer-copy-right">
-                           <p><!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
-  Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i class="ti-heart" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
-  <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. --></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-      </div>
-       <!-- Footer End-->
-
-   </footer>
    
-	<!-- JS here -->
-	
-		<!-- All JS Custom Plugins Link Here here -->
-        <link href="{% static '/css/bootstrap.min.css' %}" rel="stylesheet">
-        <script src="{% static '/js/vendor/modernizr-3.5.0.min.js' %}"></script>
-		
-		<!-- Jquery, Popper, Bootstrap -->
-		<script src="{% static '/js/vendor/jquery-1.12.4.min.js' %}"></script>
-        <script src="{% static '/js/popper.min.js"></script' %}>
-        <script src="{% static '/js/bootstrap.min.js' %}"></script>
-	    <!-- Jquery Mobile Menu -->
-        <script src="{% static '/js/jquery.slicknav.min.js' %}"></script>
+    {% load static %}
+    <section id="carousel" class="py-10 bg-white" style="height: 500px;">
+        <div 
+            x-data="{
+                activeSlide: 0,
+                slides: [
+                    { text: 'Simplify your online examinations with ease.', image: '{% static "img/image_1.webp" %}' },
+                    { text: 'AI-powered monitoring for test integrity.', image: '{% static "img/image_2.webp" %}' },
+                    { text: 'Real-time insights and detailed reporting.', image: '{% static "img/image_3.webp" %}' }
+                ],
+                interval: null,
+                startAutoplay() {
+                    this.interval = setInterval(() => {
+                        this.activeSlide = (this.activeSlide + 1) % this.slides.length;
+                    }, 5000); // 5 seconds
+                },
+                stopAutoplay() {
+                    clearInterval(this.interval);
+                }
+            }"
+            x-init="startAutoplay()" 
+            @mouseenter="stopAutoplay()" 
+            @mouseleave="startAutoplay()"
+            class="relative w-full h-full"
+        >
+            <div class="relative overflow-hidden h-full">
+                <template x-for="(slide, index) in slides" :key="index">
+                    <div 
+                        x-show="activeSlide === index" 
+                        class="absolute inset-0 transition transform duration-700 flex items-center justify-center"
+                    >
+                        <!-- Background Image -->
+                        <img 
+                            :src="slide.image" 
+                            alt="Slide image" 
+                            class="w-full h-full object-cover"
+                        >
+                        <!-- Overlay Text -->
+                        <div 
+                            class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 text-white text-center p-6"
+                        >
+                            <h2 
+                                class="text-3xl font-bold"
+                                x-text="slide.text"
+                            ></h2>
+                        </div>
+                    </div>
+                </template>
+                <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                    <template x-for="(_, index) in slides" :key="index">
+                        <button 
+                            x-on:click="activeSlide = index" 
+                            :class="{'bg-blue-600': activeSlide === index, 'bg-gray-300': activeSlide !== index}" 
+                            class="w-3 h-3 rounded-full" 
+                            aria-label="Carousel dot">
+                        </button>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section id="home" class="bg-blue-50 py-20 text-center ml-20 mr-20">
+        <div class="container mx-auto px-6 lg:px-12 ml-4 mr-4">
+            <h1 class="text-5xl font-extrabold mb-6 text-blue-700">
+                Welcome to Online Testing Center
+            </h1>
+            <p class="text-xl text-gray-600 mb-8">
+                Simplifying the way companies conduct online examinations
+            </p>
+            <a href="#services" class="bg-blue-600 text-white px-8 py-3 rounded-lg shadow-lg hover:bg-blue-700 transition duration-300 text-lg font-medium">
+                Get Started
+            </a>
+        </div>
+    </section>
+    
+    
+    
+    
+    <section id="about" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <!-- Find Us Section -->
+                <div class="bg-blue-50 p-8 rounded-lg shadow-md">
+                    <h3 class="text-2xl font-bold mb-4 text-blue-600">Find Us</h3>
+                    <ul class="space-y-4 text-gray-700">
+                        <li class="flex items-center">
+                            <span class="font-bold text-blue-500 w-24">Email:</span>
+                            <a href="mailto:contact@company.com" class="text-blue-600 hover:underline">cinfo@readingtechnology.com</a>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="font-bold text-blue-500 w-24">Phone:</span>
+                            <a href="tel:+1234567890" class="text-blue-600 hover:underline">+250786138376</a>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="font-bold text-blue-500 w-24">Location:</span>
+                            <p class="text-gray-700">Kigali, Makuza PLAZZA, FIRST FLOOR</p>
+                        </li>
+                    </ul>
+                </div>
+    
+                <!-- About Us Section -->
+                <div class="bg-blue-50 p-8 rounded-lg shadow-md">
+                    <h3 class="text-2xl font-bold mb-4 text-blue-600">About Us</h3>
+                    <p class="text-gray-700 text-lg">
+                        We provide a secure and seamless platform for companies to conduct online examinations. With advanced features like candidate monitoring and AI-driven cheating analysis, our platform ensures integrity and efficiency in the testing process.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    
+    <section id="services" class="bg-gray-100 py-10 ml-20 mr-20">
+        <div class="container mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-8">Our Services</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold mb-2">Customizable Tests</h3>
+                    <p class="text-gray-700">Create tailored tests with multiple question types and comprehensive scoring options.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold mb-2">AI-Powered Monitoring</h3>
+                    <p class="text-gray-700">Utilize AI to detect and prevent cheating during examinations.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold mb-2">Real-Time Reporting</h3>
+                    <p class="text-gray-700">Access instant insights and detailed reports to evaluate candidate performance.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <footer class="bg-gray-800 text-white py-12">
+        <div class="container mx-auto px-6 lg:px-12">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+                <!-- About Section -->
+                <div>
+                    <h3 class="text-2xl font-bold mb-4">About Us</h3>
+                    <p class="text-gray-400">We simplify online examinations for companies, providing secure, AI-driven solutions for test integrity and efficient results.</p>
+                </div>
+    
+                <!-- Links Section -->
+                <div>
+                    <h3 class="text-2xl font-bold mb-4">Quick Links</h3>
+                    <ul class="space-y-4">
+                        <li><a href="#services" class="hover:text-blue-500">Services</a></li>
+                        <li><a href="#about" class="hover:text-blue-500">About Us</a></li>
+                        <li><a href="#contact" class="hover:text-blue-500">Contact Us</a></li>
+                        <li><a href="#faq" class="hover:text-blue-500">FAQ</a></li>
+                    </ul>
+                </div>
+    
+                <!-- Account Section -->
+                <div>
+                    <h3 class="text-2xl font-bold mb-4">Account</h3>
+                    <ul class="space-y-4">
+                        <li><a href="#login" class="hover:text-blue-500">Login</a></li>
+                        <li><a href="#register" class="hover:text-blue-500">Register</a></li>
+                    </ul>
+                </div>
+    
+                <!-- Social Media Section -->
+                <div>
+                    <h3 class="text-2xl font-bold mb-4">Follow Us</h3>
+                    <div class="flex space-x-6">
+                        <a href="https://www.facebook.com" target="_blank" class="text-gray-400 hover:text-blue-600">
+                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor">
+                                <path d="M22 12c0-5.528-4.472-10-10-10s-10 4.472-10 10 4.472 10 10 10 10-4.472 10-10zm-10 7c-1.657 0-3-1.343-3-3h6c0 1.657-1.343 3-3 3zm4-6h-8v-4h8v4zm-4-5c-1.654 0-3-1.346-3-3s1.346-3 3-3c1.653 0 3 1.346 3 3s-1.347 3-3 3z"/>
+                            </svg>
+                        </a>
+                        <a href="https://www.twitter.com" target="_blank" class="text-gray-400 hover:text-blue-400">
+                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor">
+                                <path d="M22 5.5a8.97 8.97 0 0 1-2.5.7 4.5 4.5 0 0 0 1.8-2.5 9.21 9.21 0 0 1-2.9 1.1A4.48 4.48 0 0 0 15.4 3c-2.6 0-4.7 2.1-4.7 4.7 0 .4.1.8.2 1.1-3.9-.2-7.3-2.1-9.6-5a4.7 4.7 0 0 0-.6 2.4c0 1.7.9 3.2 2.2 4.1a4.4 4.4 0 0 1-2.1-.6c0 0 0 0 0 .1a4.7 4.7 0 0 0 3.7 4.7c-.8.2-1.7.2-2.5 0a4.7 4.7 0 0 0 4.4 3.3c-1.3 1-3 1.6-4.7 1.6-.3 0-.7-.1-1-.1 1.7 1.1 3.7 1.7 5.7 1.7 6.9 0 10.7-5.7 10.7-10.6v-.5a7.5 7.5 0 0 0 2.3-1.9z"/>
+                            </svg>
+                        </a>
+                        <a href="https://www.linkedin.com" target="_blank" class="text-gray-400 hover:text-blue-700">
+                            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor">
+                                <path d="M4.98 3c-.5 0-.9.4-.9.9 0 .5.4.9.9.9s.9-.4.9-.9c0-.5-.4-.9-.9-.9zm.5 1.8c-.3 0-.5-.2-.5-.5 0-.3.2-.5.5-.5.3 0 .5.2.5.5 0 .3-.2.5-.5.5zM4 5.6c-.2 0-.3.1-.3.3v13.2c0 .2.1.3.3.3h15.2c.2 0 .3-.1.3-.3V5.9c0-.2-.1-.3-.3-.3H4zM4.9 5.1c-.3 0-.5.2-.5.5v12.4c0 .3.2.5.5.5h14.1c.3 0 .5-.2.5-.5V5.6c0-.3-.2-.5-.5-.5H4.9z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+    
+            <div class="text-center text-gray-400 mt-12">
+                <p>&copy; 2025 Online Testing Center. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 
-		<!-- Jquery Slick , Owl-Carousel Plugins -->
-        <script src="{% static 's/js/owl.carousel.min.js' %}"></script>
-        <script src="{% static '/js/slick.min.js' %}"></script>
-        <!-- Date Picker -->
-        <script src="{% static '/js/gijgo.min.js' %}"></script>
-		<!-- One Page, Animated-HeadLin -->
-        <script src="{% static '/js/wow.min.js' %}"></script>
-		<script src="{% static '/js/animated.headline.js' %}"></script>
-        <script src="{% static '/js/jquery.magnific-popup.js' %}"></script>
-
-		<!-- Scrollup, nice-select, sticky -->
-        <script src="{% static '/js/jquery.scrollUp.min.js' %}"></script>
-        <script src="{% static '/js/jquery.nice-select.min.js' %}"></script>
-		<script src="{% static '/js/jquery.sticky.js' %}"></script>
-        
-        <!-- contact js -->
-        <script src="{% static '/js/contact.js' %}"></script>
-        <script src="{% static '/js/jquery.form.js' %}"></script>
-        <script src="{% static '/js/jquery.validate.min.js' %}"></script>
-        <script src="{% static 's/js/mail-script.js' %}"></script>
-        <script src="{% static '/js/jquery.ajaxchimp.min.js' %}"></script>
-        
-		<!-- Jquery Plugins, main Jquery -->	
-        <script src="{% static '/js/plugins.js' %}"></script>
-        <script src="{% static '/js/main.js' %}"></script>
-        
-    </body>
+</body>
 </html>
