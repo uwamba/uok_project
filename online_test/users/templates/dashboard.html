@@ -25,7 +25,7 @@
                                                     <!-- Count attempts for this specific test -->
 
 
-                                <p class="text-muted small">Your Attempts: {{ attempt_count }}</p>
+                                <p class="text-muted small">Your Attempts: {{ test.attempt_number }}</p>
                                 <p class="text-muted small">Total Questions: {{ test.total_questions }}</p>
                                 
                                 <h3>Results:</h3>
@@ -55,7 +55,7 @@
                                 <button class="btn btn-danger">
                                     Expired
                                 </button>
-                            {% elif attempt_count >= test.max_attempts %}
+                            {% elif test.attempt_number >= test.max_attempts %}
                                 <button class="btn btn-warning" disabled>
                                     Max Attempts Reached
                                 </button>

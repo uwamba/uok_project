@@ -1,37 +1,76 @@
 {% extends "base_admin.html" %}
 {% block content %}
-<form method="post" class="container mt-5 p-4 bg-white shadow rounded">
+<form method="post" enctype="multipart/form-data" class="container mt-5 p-4 bg-white shadow rounded">
     {% csrf_token %}
 
     <!-- Test Details -->
     <h2 class="h4 mb-4">Test Details</h2>
     
-    <label class="form-label">Title:</label>
-    <input type="text" name="test_title" required class="form-control mb-3">
-
-    <label class="form-label">Subject:</label>
-    <div class="dropdown">
-        <select name="subject" required class="form-select mb-3">
-            {% for subject in subjects %}
-            <option value="{{ subject.id }}">{{ subject.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <label class="form-label">Start Time:</label>
-    <input type="datetime-local" name="start_time" required class="form-control mb-3">
-
-    <label class="form-label">End Time:</label>
-    <input type="datetime-local" name="end_time" required class="form-control mb-3">
-
-    <label class="form-label">Total Marks:</label>
-    <input type="number" name="total_marks" required class="form-control mb-3">
-
-    <label class="form-label">Max Attempts:</label>
-    <input type="number" name="max_attempts" required class="form-control mb-3">
-
-    <label class="form-label">Duration (in minutes):</label>
-    <input type="number" name="duration" required class="form-control mb-3">
+    <div class="container mt-5 p-4 bg-white shadow rounded">
+        <form method="post">
+            {% csrf_token %}
+    
+            <!-- Title -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Title:</label>
+                    <input type="text" name="test_title" required class="form-control mb-3">
+                </div>
+            </div>
+    
+            <!-- Subject -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Subject:</label>
+                    <div class="dropdown">
+                        <select name="subject" required class="form-select mb-3">
+                            {% for subject in subjects %}
+                                <option value="{{ subject.id }}">{{ subject.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Start Time -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Start Time:</label>
+                    <input type="datetime-local" name="start_time" required class="form-control mb-3">
+                </div>
+            </div>
+    
+            <!-- End Time -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">End Time:</label>
+                    <input type="datetime-local" name="end_time" required class="form-control mb-3">
+                </div>
+            </div>
+    
+            <!-- Total Marks -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Total Marks:</label>
+                    <input type="number" name="total_marks" required class="form-control mb-3">
+                </div>
+            </div>
+    
+            <!-- Max Attempts -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Max Attempts:</label>
+                    <input type="number" name="max_attempts" required class="form-control mb-3">
+                </div>
+            </div>
+    
+            <!-- Duration -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Duration (in minutes):</label>
+                    <input type="number" name="duration" required class="form-control mb-3">
+                </div>
+            </div>
 
     <!-- Candidates Section -->
     <label class="form-label">Candidates:</label>
@@ -85,18 +124,33 @@
         const questionHTML = `
             <div class="border p-3 rounded mb-3" id="question-${questionCount}">
                 <h5>Question ${questionCount + 1}</h5>
+                <label class="form-label">Marks:</label>
+                <input type="number" name="question_marks" required class="form-control mb-2">
+                 <div class="row mb-3">
+                    <div class="col-md-12">
+                      <label for="image_${questionCount}">Image:</label>
+                      <input type="file" name="image_${questionCount}" class="form-control mb-3" id="image_${questionCount}">
+                    </div>
+                </div>
                 <label class="form-label">Text:</label>
                 <input type="text" name="question_text" required class="form-control mb-2">
 
-                <label class="form-label">Marks:</label>
-                <input type="number" name="question_marks" required class="form-control mb-2">
+              
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label class="form-label">Max Selection:</label>
+                        <input type="number" name="max_selection" value="{{ form.max_selection.value }}" class="form-control mb-3" required>
+                    </div>
+                </div>
 
                 <label class="form-label">Type:</label>
                 <select name="question_type" onchange="handleQuestionTypeChange(${questionCount}, this.value)" required class="form-select mb-2">
-                    <option value="single">Single Answer</option>
                     <option value="multiple">Multiple Answers</option>
+                    <option value="single">Single Answer</option>
                     <option value="text">Text Answer</option>
                 </select>
+                
+                
 
                 <!-- Options Section -->
                 <div id="options-section-${questionCount}">

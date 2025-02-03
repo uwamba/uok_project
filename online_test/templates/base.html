@@ -146,7 +146,30 @@ video {
         .modal-content button {
             margin-top: 20px;
         }
-          </style>
+        .fixed-header {
+            position: fixed;
+            top: 30;
+            left: 50%;
+            transform: translateX(-50%);  /* Centers the element horizontally */
+            background-color: white;
+            z-index: 1000;  /* Ensure it's on top of other elements */
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);  /* Optional shadow for visibility */
+            width: auto;  /* Optional: restricts the width of the fixed element */
+            text-align: center;  /* Centers the text inside */
+        }
+        .fixed-header h3,
+        .fixed-header p {
+            margin: 0;  /* Remove default margin to prevent spacing issues */
+        }
+    
+        /* Add margin to the content below to prevent overlap with the fixed header */
+        .content {
+            margin-top: 80px;  /* Adjust based on the height of the header */
+        }
+    </style>
+    
+
    </head>
 
    <body>

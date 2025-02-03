@@ -90,13 +90,20 @@ def add_test(request):
         # Save Questions and Options
         questions = request.POST.getlist('question_text')
         for i, question_text in enumerate(questions):
+            # Get the image from the request (it will be stored in request.FILES)
+            image = request.FILES.get(f'image_{i}', None)  # Adjust the field name as per the form field name for image input
+
+            # Create the question and save to the database
             question = Question.objects.create(
                 test=test,
                 text=question_text,
                 marks=request.POST.getlist('question_marks')[i],
                 question_type=request.POST.getlist('question_type')[i],
-                answer_text=request.POST.get(f'answer_text_{i}', None)  # Handle text answers
+                max_selection=request.POST.getlist('max_selection')[i],
+                answer_text=request.POST.get(f'answer_text_{i}', None),  # Handle text answers
+                image=image  # Save the image if it's provided
             )
+
 
             # Save Options if the question is not a text question
             if question.question_type != 'text':
@@ -118,6 +125,107 @@ def add_test(request):
     form = TestForm()
     candidates = Candidate.objects.all() 
     return render(request, 'add_test.html', {'subjects': Subject.objects.filter(company=request.user.admin.company),'form': form,'candidates': candidates})
+from datetime import datetime, timedelta
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Test, Question, QuestionOption, Candidate, Subject
+from .forms import TestForm
+
+def edit_test(request, test_id):
+    test = get_object_or_404(Test, id=test_id)
+
+    if request.method == 'POST':
+        # Update test details
+        duration_minutes = int(request.POST.get('duration'))
+        test.title = request.POST.get('test_title')
+        test.subject_id = request.POST.get('subject')
+        test.start_time = datetime.strptime(request.POST.get('start_time'), '%Y-%m-%dT%H:%M')
+        test.end_time = datetime.strptime(request.POST.get('end_time'), '%Y-%m-%dT%H:%M')
+        test.total_marks = request.POST.get('total_marks')
+        test.max_attempts = request.POST.get('max_attempts')
+        test.duration = timedelta(minutes=duration_minutes)
+        test.save()
+
+        # Update Questions
+        # Update Questions
+        questions = request.POST.getlist('question_text')
+
+        for i, question_text in enumerate(questions):
+            image = request.FILES.get(f'image_{i}', None)  # Dynamically get the image for each question
+
+            # Check if the question already exists (in case of an update)
+            question_id = None
+            if 'question_id' in request.POST and len(request.POST.getlist('question_id')) > i:
+                question_id = request.POST.getlist('question_id')[i]  # Only get the question_id if it exists
+
+            if question_id:  # If updating an existing question
+                print('question_id', question_id)
+                question = Question.objects.get(id=question_id)
+                
+                if not image:  # No new image uploaded
+                    image = question.image  # Retain the existing image
+
+                # Update question fields
+                question.text = question_text
+                question.marks = request.POST.getlist('question_marks')[i]
+                question.question_type = request.POST.getlist('question_type')[i]
+                question.max_selection = request.POST.getlist('max_selection')[i]
+                question.answer_text = request.POST.get(f'answer_text_{i}', None)
+                question.image = image  # Keep old image if no new one is uploaded
+
+            else:  # Creating a new question
+                question = Question(
+                    test=test,
+                    text=question_text,
+                    marks=request.POST.getlist('question_marks')[i],
+                    question_type=request.POST.getlist('question_type')[i],
+                    max_selection=request.POST.getlist('max_selection')[i],
+                    answer_text=request.POST.get(f'answer_text_{i}', None),
+                    image=image if image else None  # Set image if provided
+                )
+
+            question.save()  # Save the question after modifications
+
+            # Save options if the question is not a text type
+            if question.question_type != 'text':
+                question.options.all().delete()
+                options = request.POST.getlist(f'option_text_{i}')
+                correct_options = request.POST.getlist(f'is_correct_{i}')
+                for j, option_text in enumerate(options):
+                    QuestionOption.objects.create(
+                        question=question,
+                        text=option_text,
+                        is_correct=(str(j) in correct_options)
+                    )
+
+
+        # Update assigned candidates
+        selected_candidates = request.POST.getlist('candidates')
+        test.candidates.clear()  # Remove old candidates
+        for candidate_id in selected_candidates:
+            candidate = Candidate.objects.get(id=candidate_id)
+            test.candidates.add(candidate)
+
+        return redirect('admin_dashboard')
+
+    # Pre-fill the form with existing data
+    form = TestForm(instance=test)
+    candidates = Candidate.objects.filter(company=test.created_by.admin.company)
+    questions = Question.objects.filter(test=test)
+    subjects = Subject.objects.filter(company=test.created_by.admin.company)
+
+    if test.duration:
+       duration_minutes = int(test.duration.total_seconds() // 60)
+    else:
+        duration_minutes = 0
+
+    return render(request, 'edit_test.html', {
+        'test': test,
+        'form': form,
+        'candidates': candidates,
+        'questions': questions,
+        'duration_minutes': duration_minutes, 
+        'subjects': subjects,  
+    })
 
 
 

@@ -1,0 +1,252 @@
+{% extends "base_admin.html" %}
+{% block content %}
+<form method="post" enctype="multipart/form-data" class="container mt-5 p-4 bg-white shadow rounded">
+    {% csrf_token %}
+    <h2 class="h4 mb-4">Edit Test</h2>
+    
+    <label class="form-label">Title:</label>
+    <input type="text" name="test_title" value="{{ test.title }}" required class="form-control mb-3">
+
+    <label class="form-label">Subject:</label>
+    <select name="subject" required class="form-select mb-3">
+        {% for subject in subjects %}
+        <option value="{{ subject.id }}" {% if subject.id == test.subject.id %}selected{% endif %}>{{ subject.name }}</option>
+        {% endfor %}
+    </select>
+
+    <label class="form-label">Start Time:</label>
+    <input type="datetime-local" name="start_time" value="{{ test.start_time|date:'Y-m-d\TH:i' }}" required class="form-control mb-3">
+
+    <label class="form-label">End Time:</label>
+    <input type="datetime-local" name="end_time" value="{{ test.end_time|date:'Y-m-d\TH:i' }}" required class="form-control mb-3">
+
+    <label class="form-label">Total Marks:</label>
+    <input type="number" name="total_marks" value="{{ test.total_marks }}" required class="form-control mb-3">
+
+    <label class="form-label">Max Attempts:</label>
+    <input type="number" name="max_attempts" value="{{ test.max_attempts }}" required class="form-control mb-3">
+
+    <label class="form-label">Duration (in minutes):</label>
+    <input type="number" name="duration" value="{{ duration_minutes }}" required class="form-control mb-3">
+
+    <label class="form-label">Candidates:</label>
+    <input type="text" id="candidateSearch" placeholder="Search Candidates..." onkeyup="filterCandidates()" class="form-control mb-2">
+ 
+    <div class="border p-2 rounded overflow-auto" id="candidateList" style="max-height: 200px;">
+        {% for candidate in candidates %}
+        <div class="candidate-item">
+            <input type="checkbox" name="candidates" value="{{ candidate.id }}" {% if candidate in test.candidates.all %}checked{% endif %}>
+            <label>{{ candidate.full_name }}</label>
+        </div>
+        {% endfor %}
+    </div>
+ 
+    <!-- Questions Section -->
+    <h2 class="h4 mt-4 mb-3">Questions</h2>
+    <div id="questions-container" class="mb-3">
+        {% for question in questions %}
+        <input type="hidden" name="question_id" value="{{ question.id }}">
+        <div class="border p-3 rounded mb-3">
+            <h5>Question {{ forloop.counter }}</h5>
+             <!-- Image Section -->
+             <label class="form-label">Image:</label>
+             <input type="file" name="image_{{ forloop.counter0 }}" class="form-control mb-3">
+             {% if question.image %}
+                 <div class="mt-2">
+                     <img src="{{ question.image.url }}" alt="Existing Image" style="max-width: 200px;">
+                     <p><small>Existing Image</small></p>
+                 </div>
+             {% else %}
+                 <p>No image uploaded.</p>
+             {% endif %}
+
+             <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Text:</label>
+                    <input type="text" name="question_text" value="{{ question.text }}" required class="form-control mb-2">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Marks:</label>
+                    <input type="number" name="question_marks" value="{{ question.marks }}" required class="form-control mb-2">
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Max Selection:</label>
+                    <input type="number" name="max_selection" value="{{ question.max_selection }}" class="form-control mb-3" required>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-2">
+                    <label class="form-label">Type:</label>
+                </div>
+                <div class="col-md-10">
+                    <select name="question_type" onchange="handleQuestionTypeChange({{ forloop.counter0 }}, this.value)" required class="form-select mb-2">
+                        <option value="multiple" {% if question.question_type == 'multiple' %}selected{% endif %}>Multiple Answers</option>
+                        <option value="single" {% if question.question_type == 'single' %}selected{% endif %}>Single Answer</option>
+                        <option value="text" {% if question.question_type == 'text' %}selected{% endif %}>Text Answer</option>
+                    </select>
+                </div>
+            </div>
+    
+            
+    
+           
+            
+            <!-- Options Section -->
+       <!-- Options Section -->
+        <div id="options-section-{{ forloop.counter0 }}">
+            <h6>Options</h6>
+            <div id="options-container-{{ forloop.counter0 }}">
+                {% for option in question.options.all %}
+                    <div class="input-group mb-2 gap-2 option-group" id="option-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}">
+                        <input type="text" name="option_text_{{ forloop.parentloop.counter0 }}" value="{{ option.text }}" required class="form-control">
+                        <div class="input-group-text d-flex align-items-center gap-2">
+                            <input type="checkbox" name="is_correct_{{ forloop.parentloop.counter0 }}" value="{{ forloop.counter0 }}" class="form-check-input" {% if option.is_correct %}checked{% endif %}>
+                            <label class="form-check-label">Correct</label>
+                        </div>
+                        <button type="button" onclick="removeOption('{{ forloop.parentloop.counter0 }}', '{{ forloop.counter0 }}')" class="btn btn-danger btn-sm">Remove</button>
+                    </div>
+                {% endfor %}
+            </div>
+            <button type="button" onclick="addOption({{ forloop.counter0 }})" class="btn btn-secondary btn-sm mt-2">Add Option</button>
+        </div>
+
+
+    
+            <!-- Answer Text Section (hidden by default) -->
+            <div id="answer-text-section-{{ forloop.counter0 }}" style="display: {% if question.question_type == 'text' %}block{% else %}none{% endif %};">
+                <label class="form-label">Answer Text:</label>
+                <input type="text" name="answer_text_{{ forloop.counter0 }}" value="{{ question.answer_text }}" class="form-control mb-2">
+            </div>
+    
+            <button type="button" onclick="removeQuestion({{ forloop.counter0 }})" class="btn btn-danger btn-sm mt-2">Remove Question</button>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <button type="button" onclick="addQuestion()" class="btn btn-primary">Add Question</button>
+
+    <button type="submit" class="btn btn-success w-100 mt-3">Save Test</button>
+</form>
+
+<script>
+    let questionCount = {{ questions|length }};
+    function addQuestion() {
+    const questionsContainer = document.getElementById('questions-container');
+    const questionHTML = `
+        <div class="border p-3 rounded mb-3" id="question-${questionCount}">
+            <h5>Question ${questionCount + 1}</h5>
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label for="image">Image:</label>
+                    <input type="file" name="image_${questionCount}" class="form-control mb-3">
+                </div>
+            </div>
+            <label class="form-label">Text:</label>
+            <input type="text" name="question_text" required class="form-control mb-2">
+            <label class="form-label">Marks:</label>
+            <input type="number" name="question_marks" required class="form-control mb-2">
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Max Selection:</label>
+                    <input type="number" name="max_selection" class="form-control mb-3" required>
+                </div>
+            </div>
+            <label class="form-label">Type:</label>
+            <select name="question_type" onchange="handleQuestionTypeChange(${questionCount}, this.value)" required class="form-select mb-2">
+                <option value="multiple">Multiple Answers</option>
+                <option value="single">Single Answer</option>
+                <option value="text">Text Answer</option>
+            </select>
+            <div id="options-section-${questionCount}">
+                <h6>Options</h6>
+                <div id="options-container-${questionCount}"></div>
+                <button type="button" onclick="addOption(${questionCount})" class="btn btn-secondary btn-sm mt-2">Add Option</button>
+            </div>
+            <div id="answer-text-section-${questionCount}" style="display: none;">
+                <label class="form-label">Answer Text:</label>
+                <input type="text" name="answer_text_${questionCount}" class="form-control mb-2">
+            </div>
+            <button type="button" onclick="removeQuestion(${questionCount})" class="btn btn-danger btn-sm mt-2">Remove Question</button>
+        </div>
+    `;
+    questionsContainer.insertAdjacentHTML('beforeend', questionHTML);
+    questionCount++;
+}
+
+
+    function removeQuestion(index) {
+        document.getElementById(`question-${index}`).remove();
+    }
+
+    function addOption(questionIndex) {
+        const optionsContainer = document.getElementById(`options-container-${questionIndex}`);
+        const optionHTML = `
+            <div class="input-group mb-2 gap-2" id="option-${questionIndex}-${optionsContainer.children.length}">
+                <input type="text" name="option_text_${questionIndex}" required class="form-control" placeholder="Option Text">
+                <div class="input-group-text d-flex align-items-center gap-2">
+                    <input type="checkbox" name="is_correct_${questionIndex}" value="${optionsContainer.children.length}" class="form-check-input">
+                    <label class="form-check-label">Correct</label>
+                </div>
+                <button type="button" onclick="removeOption(${questionIndex}, ${optionsContainer.children.length})" class="btn btn-danger btn-sm">Remove</button>
+            </div>
+        `;
+        optionsContainer.insertAdjacentHTML('beforeend', optionHTML);
+    }
+
+   
+    // JavaScript for handling option removal
+function removeOption(questionIndex, optionIndex) {
+    const optionsContainer = document.getElementById(`options-container-${questionIndex}`);
+    
+    // Remove the option based on its index
+    const optionToRemove = optionsContainer.querySelector(`#option-${questionIndex}-${optionIndex}`);
+    if (optionToRemove) {
+        optionToRemove.remove();
+    }
+}
+
+// Attach event listener using event delegation for static and dynamic options
+document.addEventListener('click', function(event) {
+    if (event.target && event.target.classList.contains('remove-option')) {
+        const questionIndex = event.target.getAttribute('data-question-index');
+        const optionIndex = event.target.getAttribute('data-option-index');
+        removeOption(questionIndex, optionIndex);
+    }
+});
+
+    function handleQuestionTypeChange(questionIndex, questionType) {
+        const optionsSection = document.getElementById(`options-section-${questionIndex}`);
+        const answerTextSection = document.getElementById(`answer-text-section-${questionIndex}`);
+
+        if (questionType === 'text') {
+            optionsSection.style.display = 'none';
+            answerTextSection.style.display = 'block';
+        } else {
+            optionsSection.style.display = 'block';
+            answerTextSection.style.display = 'none';
+        }
+    }
+
+    function filterCandidates() {
+        const input = document.getElementById('candidateSearch');
+        const filter = input.value.toLowerCase();
+        const candidateList = document.getElementById('candidateList');
+        const candidates = candidateList.getElementsByClassName('candidate-item');
+        
+        Array.from(candidates).forEach(function(candidate) {
+            const label = candidate.querySelector('label').textContent;
+            if (label.toLowerCase().includes(filter)) {
+                candidate.style.display = '';
+            } else {
+                candidate.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}

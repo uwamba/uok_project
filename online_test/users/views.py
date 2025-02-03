@@ -23,7 +23,7 @@ import threading
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from scipy.spatial.transform import Rotation as R
-from exams.models import Test
+from exams.models import Test,ExamSession
 from videos.utils import capture_screen, monitor_webcam
 # views.py
 from rest_framework.views import APIView
@@ -155,18 +155,23 @@ def candidate_logout(request):
 def candidate_dashboard(request):
 
     candidate = Candidate.objects.get(user=request.user.id)
-    tests = candidate.tests.all().order_by('-id')
+    # Fetch all tests for the candidate, ordered by test ID
+    tests = candidate.tests.all().order_by('-id').annotate(attempt_number=Count('result'))
+    # Fetch all results for the logged-in candidate, and prefetch related 'test'
     results = Result.objects.filter(candidate=request.user.candidate).select_related('test')
-    attempt_count = results.count()
+
+
+   
+
     
             
-    return render(request, 'dashboard.html', {'tests': tests,'results':results,'now': timezone.now(), 'attempt_count': attempt_count,})
+    return render(request, 'dashboard.html', {'tests': tests,'results':results,'now': timezone.now(),})
 @login_required
 def result_list(request):
 
     candidate = Candidate.objects.get(user=request.user.id)
     tests = candidate.tests.all()
-    results = Result.objects.filter(candidate=request.user.candidate).select_related('test')
+    results = Result.objects.filter(candidate=request.user.candidate).select_related('test').order_by('-id')
     return render(request, 'result_list.html', {'tests': tests,'results':results})
 @login_required
 def admin_dashboard(request):
@@ -179,7 +184,10 @@ def admin_dashboard(request):
     current_time = timezone.now()
     for test in tests:
         # Add a custom attribute to each test indicating if the monitoring button should be shown
-        test.show_monitor_button = test.end_time > current_time
+        if test.end_time and test.end_time > current_time:
+            test.show_monitor_button = True
+        else:
+            test.show_monitor_button = False
     
     return render(request, 'admin_dashboard.html', {'tests': tests})
 @login_required
@@ -197,9 +205,13 @@ def admin_test_result(request):
 def test_report(request,test_id):
 
     admin = Admin.objects.get(user=request.user)
+    
+    print('test_id',test_id)
 
     # Fetch the test instance based on the test_id and the admin's company
-    test = Test.objects.get(id=test_id, candidates__company=admin.company)
+    test = Test.objects.filter(id=test_id, candidates__company=admin.company).distinct().first()
+
+
 
     # Fetch results for the test, filtering by company and test_id
     results = Result.objects.filter(test=test).order_by('-total_marks')
@@ -349,7 +361,10 @@ def take_test(request, test_id):
     candidate = Candidate.objects.get(user=request.user)
     now = timezone.now()  # Use Django's timezone.now()
     print('time now',now)
-    remaining_time = (test.end_time - now).total_seconds() if test.end_time else 0
+    if test.duration:
+       remaining_time = int(test.duration.total_seconds())
+    else:
+        remaining_time = 0
     
     print('test time',test.end_time)
     print('remaining time ',remaining_time)
@@ -394,7 +409,8 @@ def take_test(request, test_id):
             if question.question_type == 'multiple':  # For multiple answers
                 # Iterate through selected options for multiple-choice questions  
                
-                correct_option_count = QuestionOption.objects.filter(question_id=int(question.id)).count()
+                correct_option_count = QuestionOption.objects.filter(question_id=question.id, is_correct=True).count()
+
                 print("multiple question found")
                 for option_id in selected_option_ids:
                     selected_option = QuestionOption.objects.get(id=int(option_id))
@@ -443,11 +459,32 @@ def take_test(request, test_id):
         # Redirect to the result view page
         return redirect('dashboard')
     else:
-        
-        if remaining_time > 0:
-            return render(request, 'take_test.html', {'test': test, 'questions': questions,'remaining_time': max(0, int(remaining_time)),'userId':candidate.id })
+        # Check if there's an active session for the user and the test
+        candidate = Candidate.objects.get(user=request.user)
+        session = ExamSession.objects.filter(candidate=candidate, test=test).first()
+
+        if not session:
+            # If no session exists, create a new session
+            session = ExamSession.objects.create(candidate=candidate, test=test)
+
+        # Calculate remaining time for the test using the existing session
+        remaining_time = session.time_remaining()
+
+        # Check if remaining time is greater than 0
+        if remaining_time.total_seconds() > 0:
+            # Convert remaining time to seconds and pass to template
+            remaining_time_seconds = int(remaining_time.total_seconds())
+            return render(request, 'take_test.html', {
+                'test': test,
+                'questions': questions,
+                'remaining_time': remaining_time_seconds,
+                'userId': candidate.id
+            })
         else:
+            # If time is up, redirect to dashboard
             return redirect('dashboard')
+
+
 def test_monitor(request, test_id):
     test = Test.objects.get(id=test_id)
 

@@ -15,5 +15,7 @@ urlpatterns = [
     path('candidate/<int:candidate_id>/edit/', views.candidate_edit, name='candidate_edit'),
     path('import/', views.import_questions, name='import_questions'),
     path('export/', views.export_questions, name='export_questions'),
+    path('edit-test/<int:test_id>/', views.edit_test, name='edit_test'),
+
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

@@ -1,61 +1,72 @@
 
     {% extends 'base.html' %}
+    
 
     {% block title %}User Dashboard{% endblock %}
     
     {% block content %}
     <div class="section-top-border">
-        <h3 class="mb-30">Test Count and details will be here</h3>
-        <p><strong>Time Remaining:</strong> <span id="timer"></span></p>
-        <div class="container mt-4">
+       
+        <div class="container" style="margin-top: 50px;">
+            <div class="fixed-header">
+                <p><strong>Time Remaining:</strong> <span id="timer">{{ remaining_time }}</span> seconds</p>
+
+            </div>
             <h2>{{ test.name }}</h2>
-<form method="post" id="test">
-    {% csrf_token %}
-    {% for question in questions %}
-    <div class="mb-4">
-        <h5>{{ question.text }}</h5>
-        <h5>Type: {{ question.question_type }}</h5>
-        {% if question.question_type == "multiple" %}
-            <!-- Checkbox for multiple answers -->
-            <div>
-                {% for option in question.options.all %}
-                    <div class="form-check">
-                        <input class="form-check-input multiple-choice" 
-                        type="checkbox" name="{{ question.id }}" 
-                        id="option_{{ option.id }}" 
-                        data-question-id="{{ question.id }}" 
-                        data-max-selection="{{ question.max_selection }}"
-                        value="{{ option.id }}" id="option_{{ option.id }}">
-                        
-                        <label class="form-check-label" for="{{ option.id }}">
-                            {{ option.text }}
-                        </label>
+            <br/><br/> <br/><br/> <br/>
+            <form method="post" id="test" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% for question in questions %}
+                    <div class="mb-4">
+                       
+            
+                        <!-- Display Question Image if exists -->
+                        {% if question.image %}
+                            <div class="mb-3">
+                                <img src="{{ question.image.url }}" alt="Question Image" class="img-fluid">
+                            </div>
+                        {% endif %}
+                        <h5>{{ question.text }}</h5>
+                        {% if question.question_type == "multiple" %}
+                            <!-- Checkbox for multiple answers -->
+                            <div>
+                                {% for option in question.options.all %}
+                                    <div class="form-check">
+                                        <input class="form-check-input multiple-choice" 
+                                               type="checkbox" name="{{ question.id }}" 
+                                               id="option_{{ option.id }}" 
+                                               data-question-id="{{ question.id }}" 
+                                               data-max-selection="{{ question.max_selection }}"
+                                               value="{{ option.id }}">
+                                        <label class="form-check-label" for="{{ option.id }}">
+                                            {{ option.text }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% elif question.question_type == "single" %}
+                            <!-- Radio button for single answer -->
+                            <div>
+                                {% for option in question.options.all %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="{{ question.id }}" value="{{ option.id }}" id="option_{{ option.id }}">
+                                        <label class="form-check-label" for="{{ option.id }}">
+                                            {{ option.text }}
+                                        </label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% elif question.question_type == "text" %}
+                            <!-- Text box for text answer -->
+                            <div class="form-group">
+                                <textarea class="form-control" name="{{ question.id }}" rows="3" placeholder="Enter your answer here..."></textarea>
+                            </div>
+                        {% endif %}
                     </div>
                 {% endfor %}
-            </div>
-        {% elif question.question_type == "single" %}
-            <!-- Radio button for single answer -->
-            <div>
-                {% for option in question.options.all %}
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="{{ question.id }}" value="{{ option.id }}" id="option_{{ option.id }}">
-                        <label class="form-check-label" for="{{ option.id }}">
-                            {{ option.text }}
-                        </label>
-                    </div>
-                {% endfor %}
-            </div>
-        {% elif question.question_type == "text" %}
-            <!-- Text box for text answer -->
-            <div class="form-group">
-                <textarea class="form-control" name="{{ question.id }}" rows="3" placeholder="Enter your answer here..."></textarea>
-            </div>
-        {% endif %}
-    </div>
-  
-    {% endfor %}
-    <button type="submit" class="genric-btn primary">Submit</button>
-  </form>
+                <button type="submit" class="genric-btn primary">Submit</button>
+            </form>
+            
   <button id="capture-screen" style="display:none;">Capture Screen</button>
   <!-- open vidu test code -->
   <div id="chat-container">
@@ -111,26 +122,28 @@
     <script>
         // Get the remaining time from the context
         let mediaStream = null;
-        let remainingTime = {{ remaining_time }};
-    
-        // Update the timer every second
-        const timerElement = document.getElementById('timer');
-        const form = document.getElementById('test');
-        const interval = setInterval(() => {
-            let minutes = Math.floor(remainingTime / 60);
-            let seconds = remainingTime % 60;
-    
-            // Format the timer display
-            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
-    
+
+        let remainingTime = {{ remaining_time }};  // This will be the time in seconds
+
+        function countdown() {
             if (remainingTime <= 0) {
-                clearInterval(interval);
-                alert('Time is up! Submitting the test...');
-                form.submit(); // Automatically submit the form
+                // Automatically submit the form when time is up
+                document.getElementById('submitTestForm').submit();  // Trigger form submission
+            } else {
+                remainingTime--;
+                document.getElementById('timer').innerText = formatTime(remainingTime);
+                setTimeout(countdown, 1000);  // Update every second
             }
-    
-            remainingTime--;
-        }, 1000);
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secondsLeft = seconds % 60;
+            return `${minutes}:${secondsLeft < 10 ? '0' : ''}${secondsLeft}`;
+        }
+
+        countdown();  // Start the countdown
+
 
          // Validate multiple-choice question max selection
     document.addEventListener('DOMContentLoaded', () => {

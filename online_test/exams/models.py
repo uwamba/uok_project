@@ -79,3 +79,28 @@ class QuestionOption(models.Model):
 
     def __str__(self):
         return self.text[:50]
+    
+
+
+from django.utils import timezone
+from datetime import timedelta
+
+class ExamSession(models.Model):
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+    test = models.ForeignKey(Test, on_delete=models.CASCADE)
+    start_time = models.DateTimeField(auto_now_add=True)
+
+    def time_remaining(self):
+        """
+        Calculate the time remaining for the test
+        """
+        # Ensure start_time is aware
+        if self.start_time.tzinfo is None:
+            start_time_aware = timezone.make_aware(self.start_time)
+        else:
+            start_time_aware = self.start_time
+        
+        time_elapsed = timezone.now() - start_time_aware
+        remaining_time = self.test.duration - time_elapsed
+
+        return max(remaining_time, timedelta(0))  # Ensure it doesn't go negative
