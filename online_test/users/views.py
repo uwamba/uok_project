@@ -219,6 +219,8 @@ def test_report(request,test_id):
     # Fetch monitoring logs for the test, grouped by candidate, and count the logs for each candidate
     logs_count = MonitoringLog.objects.filter(test=test).values('candidate', 'candidate__full_name')\
         .annotate(log_count=Count('id')).order_by('-log_count')
+    
+
 
     # Combine the results and logs into a list of dictionaries
     combined_data = []
@@ -469,7 +471,7 @@ def take_test(request, test_id):
 
         # Calculate remaining time for the test using the existing session
         remaining_time = session.time_remaining()
-
+        print('total remianing time', remaining_time)
         # Check if remaining time is greater than 0
         if remaining_time.total_seconds() > 0:
             # Convert remaining time to seconds and pass to template

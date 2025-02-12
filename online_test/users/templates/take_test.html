@@ -207,20 +207,25 @@ createToken(sessionId,user,userId,testId).then(response => {
         });
 
         //chat 
-        // Handle chat messages
+
+
       session.on('signal:chat', event => {
-        const message = event.data;
-        const chatMessages = document.getElementById('chat-messages');
-        const messageDiv = document.createElement('div');
-        messageDiv.textContent = message;
-        messageDiv.style.padding = '8px';
-        messageDiv.style.marginBottom = '8px';
-        messageDiv.style.backgroundColor = '#e0e0e0';
-        messageDiv.style.borderRadius = '5px';
-        chatMessages.appendChild(messageDiv);
-       
-        console.log("chat started hererrrrrrrrrrrr")
-      });
+        const myConnectionId = session.connection.connectionId;  // Your connection ID
+        const senderConnectionId = event.from.connectionId;  // Sender's connection ID
+
+        if (myConnectionId !== senderConnectionId) {
+                //openPopup(event.data);
+
+                const messageData = JSON.parse(event.data);  // Convert the JSON string back to an objec
+
+                fetchLog(event.data);
+
+                console.log("Message received from another user");
+            } else {
+                console.log("This is my own message; skipping.");
+            }
+        });
+
 
     // Connect to the session
     session.connect(token, { username: user,userId:userId,testId:testId })
@@ -391,34 +396,17 @@ function toggleChat() {
 function sendMessage() {
     const messageInput = document.getElementById('message-input');
     const chatMessages = document.getElementById('chat-messages');
-    
+    const userId = "{{ userId|escapejs }}";
+    const testId = "{{ test.id|escapejs }}";
+
     const messageText = messageInput.value.trim();
 
     if (messageText) {
         console.log('sart sending');
         console.log(session)
-        console.log('sart sending');
-        // Display the message locally
-        const messageDiv = document.createElement('div');
-        messageDiv.textContent = messageText;
-        messageDiv.style.padding = '8px';
-        messageDiv.style.marginBottom = '8px';
-        messageDiv.style.backgroundColor = '#e0e0e0';
-        messageDiv.style.borderRadius = '5px';
-        chatMessages.appendChild(messageDiv);
 
-        // Ensure session is connected before sending signal
-        if (session) {
-            console.error('Session sending chat message:');
-            session.signal({
-                type: 'chat',
-                data: messageText,
-            }).catch(error => {
-                console.error('Error sending chat message:', error);
-            });
-        } else {
-            console.warn('Session is not connected. Cannot send message.');
-        }
+        logMessage(userId, testId, "message", messageText)
+       
 
         // Clear input field and scroll to bottom
         messageInput.value = '';
@@ -438,7 +426,10 @@ async function trackTabStatus() {
 
    window.addEventListener('blur', function() {
     console.log('Tab is blurred (inactive)!');
-    //captureScreenshot(userId, testId, 'screenshot', 'user tab is inactive');
+    
+    setTimeout(() => {
+        captureScreenshot(userId, testId, 'screenshot', 'user tab is inactive');
+    }, 3000); 
    
   });
 
@@ -446,7 +437,10 @@ async function trackTabStatus() {
    document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
       console.log('Tab is hidden!');
-      captureScreenshot(userId, testId, 'screenshot', 'user tab is hidden');
+      
+      setTimeout(() => {
+        captureScreenshot(userId, testId, 'screenshot', 'user tab is hidden');
+    }, 3000); 
     } else {
       console.log('Tab is visible!');
     }
@@ -469,10 +463,10 @@ async function trackTabStatus() {
 // Example usage:
 
 
-async function sendMonitoringLog(userId, testId, activityType, activityData, screenshotDataURL) {
+async function sendMonitoringLog(userId, testId, activityType, activityData,screenshotDataURL) {
     const csrftoken = getCSRFToken(); 
     try {
-   
+
        
         const response = await fetch('http://127.0.0.1:8000/video/upload-monitoring-log/', {
             method: 'POST',
@@ -483,8 +477,8 @@ async function sendMonitoringLog(userId, testId, activityType, activityData, scr
                 user_id: userId,
                 test_id: testId,
                 activity_type: activityType,
-                activityData: activityData, // Pass JSON data
-                screenshot: screenshotDataURL,      // Base64-encoded image
+                activityData: activityData,
+                screenshot: screenshotDataURL, // Pass JSON data
             }),
         });
 
@@ -531,21 +525,30 @@ async function sendMonitoringLog(userId, testId, activityType, activityData, scr
         // Show the consent modal when the page loads
         window.onload = () => {
             showConsentModal();
+            const testId={{test.id}};
+            console.log('monitor loggedddddddddddddddddddddddddddddddddddddddddddddddddddddddd',testId);
+            fetchLogs(testId);
         };
 
 
 // Function to start screen capture
 async function startScreenCapture() {
     try {
-        mediaStream = await navigator.mediaDevices.getDisplayMedia({
-            video: { mediaSource: "screen" },
+         mediaStream = await navigator.mediaDevices.getDisplayMedia({
+            video: {
+                cursor: "always", // Options: "always", "motion", or "never"
+                displaySurface: "monitor" // Prioritize full-screen capture
+            },
+            audio: false // Set true if you want to capture audio as well
         });
-        console.log('Screen capture started');
-        // Now you can call takeScreenShot function after this
+
+
+        // Use the mediaStream to take a screenshot or further processing
     } catch (err) {
         console.error('Error accessing screen capture:', err);
     }
 }
+
 
 // Function to take screenshot from the captured media stream
 async function takeScreenShot() {
@@ -556,7 +559,7 @@ async function takeScreenShot() {
     const video = document.createElement('video');
     video.srcObject = mediaStream;
     video.autoplay = true;
-    document.body.appendChild(video);
+    //document.body.appendChild(video);
 
     // Wait until the video element has loaded metadata
     await new Promise((resolve) => {
@@ -614,6 +617,170 @@ async function captureScreenshot(userId, testId, type, data) {
 
 
 trackTabStatus();
+
+
+async function logMessage(userId, testId, activityType, activityData) {
+    const csrftoken = getCSRFToken(); 
+    try {
+   
+       
+        const response = await fetch('http://127.0.0.1:8000/video/upload_monitoring_message/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                user_id: userId,
+                test_id: testId,
+                activity_type: activityType,
+                activityData: activityData, // Pass JSON data
+                is_admin:false
+            }),
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            if (session) {
+            console.log('Session sending chat message:');
+            session.signal({
+                type: 'chat',
+                data: result.log_id,
+            }).catch(error => {
+                console.error('Error sending chat message:', error);
+            });
+            fetchLog(result.log_id);
+            } else {
+                console.warn('Session is not connected. Cannot send message.');
+            }
+            console.log('Monitoring log created successfully:', result);
+        } else {
+            const error = await response.json();
+            console.error('Error creating monitoring log:');
+        }
+    } catch (error) {
+        console.error('Network error:', error);
+    }
+}
+
+async function fetchLog(logId) {
+    const chatMessages = document.getElementById('chat-messages');
+    try {
+        // API endpoint to fetch logs
+        const response = await fetch(`http://127.0.0.1:8000/video/get_log/${logId}/`);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch logs: ${response.statusText}`);
+        }
+
+        // Parse the response JSON
+        const data = await response.json();
+        const log=data.logs;
+        console.log('logssss',log);
+        const messageDiv = document.createElement('div');
+            messageDiv.style.padding = '10px';
+            messageDiv.style.marginBottom = '10px';
+            messageDiv.style.backgroundColor = '#f5f5f5';
+            messageDiv.style.borderRadius = '5px';
+            messageDiv.style.border = '1px solid #ddd';
+
+            // Create a list item inside the div
+            const logElement = document.createElement('li');
+            const isAdmin = (log.is_admin === true || log.is_admin === 'true');
+            logElement.innerText = `[${log.timestamp}] ${isAdmin ? 'Admin' : log.candidate.full_name}, ${log.data}`;
+            logElement.style.listStyleType = 'none'; // Optional, removes bullet points
+            logElement.style.margin = '0';
+            logElement.style.padding = '0';
+
+            // Append the list item to the div
+            messageDiv.appendChild(logElement);
+
+            const url = `/video/monitoring-log/${log.id}/`;
+
+       // console.log(url); 
+
+
+        const link = document.createElement('a');
+       // link.href = url; // Set the URL from the fetched data
+        //link.textContent = 'view Screenshot'; // Link text
+       // link.target = '_blank'; // Open in a new tab (optional)// Set a default filename (optional)
+       // messageDiv.appendChild(link);
+
+            // Append the div to the chat container
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTo({
+                top: chatMessages.scrollHeight, // Use chatMessages.scrollHeight to scroll to the bottom
+                behavior: 'smooth' // Optional: Adds smooth scrolling
+            });
+
+      
+    } catch (error) {
+        console.error('Error fetching logs:', error);
+    }
+}
+async function fetchLogs(testId) {
+    const chatMessages = document.getElementById('chat-messages');
+    try {
+        // API endpoint to fetch logs
+        const response = await fetch(`http://127.0.0.1:8000/video/get_messages/${testId}/`);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch logs: ${response.statusText}`);
+        }
+
+        // Parse the response JSON
+        const data = await response.json();
+
+        // Get the chat container element
+       // const chatContainer = document.getElementById(chatContainerId);
+
+        // Clear existing content in the chat container (optional)
+       // chatContainer.innerHTML = '';
+
+        // Append logs to the chat container
+        console.log(data.logs);
+        data.logs.forEach((log, index) => {
+        console.log(`Processing log #${index}:`, log.activity_type);
+
+         // Create a new div for each log (for styling)
+         const messageDiv = document.createElement('div');
+            messageDiv.style.padding = '10px';
+            messageDiv.style.marginBottom = '10px';
+            messageDiv.style.backgroundColor = '#f5f5f5';
+            messageDiv.style.borderRadius = '5px';
+            messageDiv.style.border = '1px solid #ddd';
+
+            // Create a list item inside the div
+            const logElement = document.createElement('li');
+            const isAdmin = (log.is_admin === true || log.is_admin === 'true');
+            logElement.innerText = `[${log.timestamp}] ${isAdmin ? 'Admin' : log.candidate.full_name}, ${log.data}`;
+            logElement.style.listStyleType = 'none'; // Optional, removes bullet points
+            logElement.style.margin = '0';
+            logElement.style.padding = '0';
+
+            // Append the list item to the div
+            messageDiv.appendChild(logElement);
+
+            
+
+            const url = `/video/monitoring-log/${log.id}/`;
+
+       // console.log(url); 
+
+
+       
+
+            // Append the div to the chat container
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTo({
+                top: chatMessages.scrollHeight, // Use chatMessages.scrollHeight to scroll to the bottom
+                behavior: 'smooth' // Optional: Adds smooth scrolling
+            });
+           
+    });
+    } catch (error) {
+        console.error('Error fetching logs:', error);
+    }
+}
 
     </script>
     {% endblock %}

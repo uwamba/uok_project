@@ -36,6 +36,7 @@ class MonitoringLog(models.Model):
     screenshot = models.ImageField(upload_to='monitoring_screenshots/', null=True, blank=True)
     start_time = models.DateTimeField(default=now)
     end_time = models.DateTimeField(null=True, blank=True)
+    is_admin = models.BooleanField(default=False)
 
     def clean(self):
         try:

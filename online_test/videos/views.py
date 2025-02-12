@@ -12,6 +12,7 @@ from users.models import Candidate
 from scipy.spatial.transform import Rotation as R
 
 from exams.models import Test
+from results.models import Result
 from videos.models import MonitoringLog
 from videos.utils import capture_screen, monitor_webcam
 import requests
@@ -419,6 +420,8 @@ def upload_monitoring_log(request):
                 file_path = os.path.join(upload_folder, file_name)
 
                 # Save the file to the model's ImageField (assuming it's in the model)
+                #result_count = Result.objects.filter(candidate=candidate_instance).count()
+                
                 log_entry = MonitoringLog.objects.create(
                     candidate=candidate_instance,  # Assuming user is logged in
                     test=test,
@@ -429,10 +432,63 @@ def upload_monitoring_log(request):
                 )
 
 
+                return JsonResponse({
+                    'message': 'Monitoring log created successfully',
+                    'log_id': log_entry.id,
+                    'screenshot_url': file_name,
+                })
+        except Candidate.DoesNotExist:
+            
+            return JsonResponse({'error': 'User not found'}, status=404)
+        except Test.DoesNotExist:
+            return JsonResponse({'error': 'Test not found'}, status=404)
+        except Exception as e:
+            print('error', str(e))
+            return JsonResponse({'error': str(e)}, status=500)
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+@csrf_exempt
+def upload_monitoring_message(request):
+    if request.method == 'POST':
+        try:
+            # Extract fields from the request
+            user_id = request.POST.get('user_id')
+            test_id = request.POST.get('test_id')
+            activity_type = request.POST.get('activity_type')
+            activityData = request.POST.get('activityData')
+            is_admin = request.POST.get('is_admin')
+            if(is_admin=='true'):
+                is_admin=True
+            else:
+                is_admin=False
+            print('user',user_id)
+            print('test_id',test_id)
+            print('activityData',activityData)
+         
+
+            # Validate required fields
+            if not (user_id and test_id and activity_type and activityData):
+                return JsonResponse({'error': 'Missing required fields'}, status=400)
+
+            # Decode the screenshot if provided
+            screenshot_file = None
+            candidate_instance = Candidate.objects.get(id=user_id)
+            test = Test.objects.get(id=test_id)
+               
+
+                # Save the file to the model's ImageField (assuming it's in the model)
+            log_entry = MonitoringLog.objects.create(
+                    candidate=candidate_instance,  # Assuming user is logged in
+                    test=test,
+                    activity_type=activity_type,
+                    data=activityData,
+                    is_admin=is_admin,
+                    start_time=now(),
+                )
+
+
             return JsonResponse({
-                'message': 'Monitoring log created successfully',
+                'message': 'Message created successfully',
                 'log_id': log_entry.id,
-                'screenshot_url': file_name,
             })
         except Candidate.DoesNotExist:
             
@@ -647,16 +703,7 @@ def predFacePose(imgaePath,video_id,candidate_instance,test):
                     
                     return { 'logged':False}
                 else: 
-                    if angR < angL and angN >= 40:
-                        predLabel = 'Left Profile'
-                    elif angR > angL and angN >= 40:
-                        predLabel = 'Right Profile'
-                    elif angN > 60:
-                        predLabel = 'Upward'
-                    elif angN < 40:
-                        predLabel = 'Downward'
-                    else:
-                        predLabel = 'Unknown'
+                    predLabel = 'Outside camera'
                     predLabelList.append(predLabel)
 
                     # Check if 'Frontal' is not in predLabelList
@@ -665,8 +712,8 @@ def predFacePose(imgaePath,video_id,candidate_instance,test):
                         log_entry = MonitoringLog.objects.create(
                             candidate=candidate_instance,  # Assuming user is logged in
                             test=test,
-                            activity_type="Cheating Object",
-                            data = f"Cheating Object: {predLabelList}",  # The file will be automatically saved in the 'monitoring_screenshots' folder
+                            activity_type="candidate is looking ouside ",
+                            data = f"candidate is: {predLabelList}",  # The file will be automatically saved in the 'monitoring_screenshots' folder
                             start_time=now(),
                         )
             
@@ -693,7 +740,12 @@ def monitoring_log_detail(request, log_id):
     return render(request, 'monitoring_log_detail.html', context)
 @csrf_exempt
 def get_logs(request, test_id):
-    logs = MonitoringLog.objects.filter(test_id=test_id).order_by('timestamp')[:100]
+    #logs = MonitoringLog.objects.filter(test_id=test_id).order_by('timestamp')
+    logs = MonitoringLog.objects.filter(
+    test_id=test_id
+    ).exclude(
+        activity_type="message"
+    ).order_by('timestamp')
     logs_data = [
     {
         'candidate': {
@@ -703,11 +755,32 @@ def get_logs(request, test_id):
         'activity_type': log.activity_type,
         'timestamp': log.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
         'data': log.data,
+        'is_admin': log.is_admin,
         'id': log.id,
     }
     for log in logs
     ]
     return JsonResponse({'logs': logs_data})
+@csrf_exempt
+def get_messages(request, test_id):
+    logs = MonitoringLog.objects.filter(test_id=test_id,activity_type="message").order_by('timestamp')
+    
+    logs_data = [
+    {
+        'candidate': {
+            'id': log.candidate.id,
+            'full_name': log.candidate.full_name,  # Assuming the Candidate model has a `name` field
+        },
+        'activity_type': log.activity_type,
+        'timestamp': log.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+        'data': log.data,
+        'is_admin': log.is_admin,
+        'id': log.id,
+    }
+    for log in logs
+    ]
+    return JsonResponse({'logs': logs_data})
+
 
 @csrf_exempt
 def get_log(request, log_id):
@@ -720,6 +793,7 @@ def get_log(request, log_id):
         'activity_type': log.activity_type,
         'timestamp': log.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
         'data': log.data,
+        'is_admin': log.is_admin,
         'id': log.id,
     }
     print(log_data)
