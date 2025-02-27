@@ -25,7 +25,7 @@
                         <tr>
                             <td>{{ forloop.counter }}</td>
                             <td><a href="{% url 'test_detail' result.test.id result.id %}">{{ result.test.title }}</a></td>  <!-- Make title clickable -->
-                            <td>{{ result.total_marks }}</td>
+                            <td>{{ result.total_marks }}/{{ result.test.total_marks }}</td>
                             <td>{{ result.date_taken }}</td>
                             <td>{{ result.attempt_number }}</td>
                         </tr>

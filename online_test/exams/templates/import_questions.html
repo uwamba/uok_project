@@ -1,23 +1,124 @@
 {% extends 'base_admin.html' %}
 
-{% block title %}Import Export{% endblock %}
+{% block title %}Create Test{% endblock %}
 
 {% block content %}
 <div class="section-top-border">
-    <h3 class="mb-30">Import export</h3>
+    <h3 class="mb-30">Create Test</h3>
 
     <div class="container mt-4">
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Test Title -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Title:</label>
+                    <input type="text" name="test_title" required class="form-control mb-3">
+                </div>
+            </div>
     
+            <!-- Subject -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Subject:</label>
+                    <select name="subject" required class="form-select mb-3">
+                        {% for subject in subjects %}
+                            <option value="{{ subject.id }}">{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+    
+            <!-- Start Time -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Start Time:</label>
+                    <input type="datetime-local" name="start_time" required class="form-control mb-3">
+                </div>
+            </div>
+    
+            <!-- End Time -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">End Time:</label>
+                    <input type="datetime-local" name="end_time" required class="form-control mb-3">
+                </div>
+            </div>
+    
+            <!-- Total Marks -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Total Marks:</label>
+                    <input type="number" name="total_marks" required class="form-control mb-3">
+                </div>
+            </div>
+    
+            <!-- Max Attempts -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Max Attempts:</label>
+                    <input type="number" name="max_attempts" required class="form-control mb-3">
+                </div>
+            </div>
+    
+            <!-- Duration -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Duration (in minutes):</label>
+                    <input type="number" name="duration" required class="form-control mb-3">
+                </div>
+            </div>
 
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Import</button>
-    </form>
+            <!-- Candidates Section -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label">Candidates:</label>
+                    <input type="text" id="candidateSearch" placeholder="Search Candidates..." onkeyup="filterCandidates()" class="form-control mb-2">
+                    
+                    <div class="border p-2 rounded overflow-auto" id="candidateList" style="max-height: 200px;">
+                        {% for candidate in candidates %}
+                        <div class="candidate-item">
+                            <input type="checkbox" name="candidates" value="{{ candidate.id }}">
+                            <label>{{ candidate.full_name }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
 
-    <h3>Or Export Questions</h3>
-    <a href="{% url 'export_questions' %}">Download Questions as Excel</a>
+            <!-- Import Questions Section -->
+            <h2 class="h4 mt-4 mb-3">Import Questions</h2>
+            <div class="mb-3">
+                <label class="form-label">Upload Questions File (CSV/Excel):</label>
+                <input type="file" name="questions_file" class="form-control mb-3">
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-success w-100 mt-3">Save Test</button>
+        </form>
     </div>
+</div>
 
-</div> 
+<script>
+    function filterCandidates() {
+        var input, filter, container, items, labels, i, txtValue;
+        input = document.getElementById('candidateSearch');
+        filter = input.value.toUpperCase();
+        container = document.getElementById('candidateList');
+        items = container.getElementsByClassName('candidate-item');
+
+        for (i = 0; i < items.length; i++) {
+            labels = items[i].getElementsByTagName('label');
+            if (labels.length > 0) {
+                txtValue = labels[0].textContent || labels[0].innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    items[i].style.display = "";
+                } else {
+                    items[i].style.display = "none";
+                }
+            }
+        }
+    }
+</script>
 {% endblock %}

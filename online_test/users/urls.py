@@ -15,7 +15,7 @@ urlpatterns = [
     path('monitor/<int:test_id>/', views.test_monitor, name='monitor'),
     path('result/<int:result_id>/', views.view_result, name='result'),
     path('login_api/', views.LoginView.as_view(), name='login_api'),
-    path('export/results/', views.export_results_to_excel, name='export_results_to_excel'),
+    path('export/results/<int:test_id>/', views.export_results_to_excel, name='export_results_to_excel'),
     path('export/log_report/pdf/<int:candidate_id>/', views.export_log_report_to_pdf, name='export_log_report_to_pdf'),
 
 

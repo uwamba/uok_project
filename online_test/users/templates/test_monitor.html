@@ -1,46 +1,46 @@
 
-    {% extends 'base_admin.html' %}
+{% extends 'base_admin.html' %}
 
-    {% block title %}User Dashboard{% endblock %}
+{% block title %}User Dashboard{% endblock %}
+
+{% block content %}
+<div class="section-top-border">
+    <h3 class="mb-30">Test Count and details will be here</h3>
+    <p><strong>Time Remaining:</strong> <span id="timer"></span></p>
+    <div class="container mt-4">
+        <h2>{{ test.title }}</h2>
+        <h2>Tests and Candidates</h2>
+        <h2>Candidates:</h2>
+        <ul>
+            {% for candidate in candidates %}
+                <li>{{ candidate.user.username }} - {{ candidate.user.email }}</li>
+            {% empty %}
+                <li>No candidates have registered for this test.</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <!-- Modal -->
+    <div id="monitor-container" class="monitor-container">
+        <div id="video-container" class="video-container">
+        </div>
+    </div>
     
-    {% block content %}
-    <div class="section-top-border">
-        <h3 class="mb-30">Test Count and details will be here</h3>
-        <p><strong>Time Remaining:</strong> <span id="timer"></span></p>
-        <div class="container mt-4">
-            <h2>{{ test.title }}</h2>
-            <h2>Tests and Candidates</h2>
-            <h2>Candidates:</h2>
-            <ul>
-                {% for candidate in candidates %}
-                    <li>{{ candidate.user.username }} - {{ candidate.user.email }}</li>
-                {% empty %}
-                    <li>No candidates have registered for this test.</li>
-                {% endfor %}
-            </ul>
-        </div>
-        <!-- Modal -->
-        <div id="monitor-container" class="monitor-container">
-            <div id="video-container" class="video-container">
-            </div>
-        </div>
-        
-    </div> 
+</div> 
 
-    <!-- Floating Chat Container -->
+<!-- Floating Chat Container -->
 <div id="chat-container">
-    <div id="chat-header">
-        <h4>Chat with us</h4>
-        <button id="close-chat" onclick="toggleChat()">X</button>
-    </div>
-    <div id="chat-body">
-        <!-- Chat messages will appear here -->
-        <div id="chat-messages"></div>
-    </div>
-    <div id="chat-input">
-        <input type="text" id="message-input" placeholder="Type your message..." />
-        <button onclick="sendMessage()">Send</button>
-    </div>
+<div id="chat-header">
+    <h4>Chat with us</h4>
+    <button id="close-chat" onclick="toggleChat()">X</button>
+</div>
+<div id="chat-body">
+    <!-- Chat messages will appear here -->
+    <div id="chat-messages"></div>
+</div>
+<div id="chat-input">
+    <input type="text" id="message-input" placeholder="Type your message..." />
+    <button onclick="sendMessage()">Send</button>
+</div>
 </div>
 
 <!-- Button to open the chat -->
@@ -50,15 +50,15 @@
 
 
 <div id="log-container">
-    <div id="log-header">
-        <h4>All Logs</h4>
-        <button id="close-log" onclick="toggleLogs()">X</button>
-    </div>
-    <div id="log-body">
-        <!-- Chat messages will appear here -->
-        <div id="log-messages"></div>
-    </div>
-    
+<div id="log-header">
+    <h4>All Logs</h4>
+    <button id="close-log" onclick="toggleLogs()">X</button>
+</div>
+<div id="log-body">
+    <!-- Chat messages will appear here -->
+    <div id="log-messages"></div>
+</div>
+
 </div>
 
 <!-- Button to open the chat -->
@@ -66,824 +66,823 @@
 
 <div id="overlay"></div>
 <div id="popup">
-  <h2 id="chat_name">Enter Your Name</h2>
-  <input type="textarea" id="userInput" placeholder="response here" />
-  <button onclick="submitInput()">Submit</button>
+<h2 id="chat_name">Enter Your Name</h2>
+<input type="textarea" id="userInput" placeholder="response here" />
+<button onclick="submitInput()">Submit</button>
 </div>
 
 
 <script>
-  function openPopup(data) {
-    document.getElementById('chat_name').innerText = data.sender;
-    document.getElementById('popup').style.display = 'block';
-    document.getElementById('overlay').style.display = 'block';
-  }
+function openPopup(data) {
+document.getElementById('chat_name').innerText = data.sender;
+document.getElementById('popup').style.display = 'block';
+document.getElementById('overlay').style.display = 'block';
+}
 
-  function submitInput() {
-    let input = document.getElementById('userInput').value;
-    if (input) {
-      alert("Hello, " + input + "!");
-    } else {
-      alert("Please enter your name.");
-    }
-    closePopup();
-  }
+function submitInput() {
+let input = document.getElementById('userInput').value;
+if (input) {
+  alert("Hello, " + input + "!");
+} else {
+  alert("Please enter your name.");
+}
+closePopup();
+}
 
-  function closePopup() {
-    document.getElementById('popup').style.display = 'none';
-    document.getElementById('overlay').style.display = 'none';
-  }
+function closePopup() {
+document.getElementById('popup').style.display = 'none';
+document.getElementById('overlay').style.display = 'none';
+}
 </script>
 
-    
-    {% load static %}
-    <script src="{% static '/js/openvidu-browser-2.23.0.js' %}"></script>
-    <script>
-        // Get the remaining time from the context
-        let remainingTime = {{ remaining_time }};
-    
-        // Update the timer every second
-        const timerElement = document.getElementById('timer');
-        const form = document.getElementById('test');
-        const interval = setInterval(() => {
-            let minutes = Math.floor(remainingTime / 60);
-            let seconds = remainingTime % 60;
-    
-            // Format the timer display
-            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
-    
-            if (remainingTime <= 0) {
-                clearInterval(interval);
-                alert('Time is up! Submitting the test...');
-                form.submit(); // Automatically submit the form
+
+{% load static %}
+<script src="{% static '/js/openvidu-browser-2.23.0.js' %}"></script>
+<script>
+    // Get the remaining time from the context
+    let remainingTime = {{ remaining_time }};
+
+    // Update the timer every second
+    const timerElement = document.getElementById('timer');
+    const form = document.getElementById('test');
+    const interval = setInterval(() => {
+        let minutes = Math.floor(remainingTime / 60);
+        let seconds = remainingTime % 60;
+
+        // Format the timer display
+        timerElement.textContent = `${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+
+        if (remainingTime <= 0) {
+            clearInterval(interval);
+            alert('Time is up! Submitting the test...');
+            form.submit(); // Automatically submit the form
+        }
+
+        remainingTime--;
+    }, 1000);
+
+     // Validate multiple-choice question max selection
+document.addEventListener('DOMContentLoaded', () => {
+    const checkboxes = document.querySelectorAll('.multiple-choice');
+
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            const questionId = e.target.getAttribute('data-question-id');
+            const maxSelections = parseInt(e.target.getAttribute('data-max-selection'), 10);
+
+            const selected = document.querySelectorAll(
+                `.multiple-choice[data-question-id="${questionId}"]:checked`
+            );
+
+            if (selected.length > maxSelections) {
+                alert(`You can only select up to ${maxSelections} options for this question.`);
+                e.target.checked = false;
             }
-    
-            remainingTime--;
-        }, 1000);
-
-         // Validate multiple-choice question max selection
-    document.addEventListener('DOMContentLoaded', () => {
-        const checkboxes = document.querySelectorAll('.multiple-choice');
-
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', (e) => {
-                const questionId = e.target.getAttribute('data-question-id');
-                const maxSelections = parseInt(e.target.getAttribute('data-max-selection'), 10);
-
-                const selected = document.querySelectorAll(
-                    `.multiple-choice[data-question-id="${questionId}"]:checked`
-                );
-
-                if (selected.length > maxSelections) {
-                    alert(`You can only select up to ${maxSelections} options for this question.`);
-                    e.target.checked = false;
-                }
-            });
         });
     });
-        //const videoElement = document.getElementById('videoElement');
-        var user=generateRandomString(10);
-        const sessionId="S000"+"{{ test.id|escapejs }}";
-        console.log('generated username', user);
-    
-        // Access the user's webcam
-       
+});
+    //const videoElement = document.getElementById('videoElement');
+    var user=generateRandomString(10);
+    const sessionId="S000"+"{{ test.id|escapejs }}";
+    console.log('generated username', user);
+
+    // Access the user's webcam
+   
 
 
 const OV = new OpenVidu();
 const session = OV.initSession();
 createSession(sessionId).then(response => {
-    const sessionId = response; 
-    console.log('response session Id:', sessionId); 
-    console.log('-------------------------------- create token---------------------')
+const sessionId = response; 
+console.log('response session Id:', sessionId); 
+console.log('-------------------------------- create token---------------------')
 createToken(sessionId,user).then(response => {
-		const token = response.token; // Extract the token string
-		console.log('Extracted Token:', token); 
-        //subscribe to stream
+    const token = response.token; // Extract the token string
+    console.log('Extracted Token:', token); 
+    //subscribe to stream
 
-    session.on('streamCreated', (event) => {
-        console.log('Stream created: ', event.stream);
+session.on('streamCreated', (event) => {
+    console.log('Stream created: ', event.stream);
+    
+    // Subscribe to the stream
+    //const subscriber = session.subscribe(event.stream, undefined);
+
+
+    const subscriber = session.subscribe(event.stream, 'video-container');
+
+    // Handle the creation of the video element
+    subscriber.on('videoElementCreated', event => {
+        console.log('Video appended to DOM:', event);
+
+        var dataNode = document.createElement('div');
+        const parsedData = JSON.parse(event.target.stream.connection.data);
+        const clientData = parsedData.username;
+        const userId = parsedData.userId;
+        const testId=parsedData.testId;
+        var userData=clientData;
+        var nodeId=clientData;
+
+        console.log("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",testId)
         
-        // Subscribe to the stream
-        //const subscriber = session.subscribe(event.stream, undefined);
+        dataNode.className = "video-name";
+        dataNode.id = "data-" + nodeId;
+        dataNode.innerHTML = "<p>" + userData + "</p>";
+        event.element.parentNode.insertBefore(dataNode, event.element.nextSibling);
 
-
-        const subscriber = session.subscribe(event.stream, 'video-container');
-
-        // Handle the creation of the video element
-        subscriber.on('videoElementCreated', event => {
-            console.log('Video appended to DOM:', event);
-
-            var dataNode = document.createElement('div');
-            const parsedData = JSON.parse(event.target.stream.connection.data);
-            const clientData = parsedData.username;
-            const userId = parsedData.userId;
-            const testId=parsedData.testId;
-            var userData=clientData;
-	        var nodeId=clientData;
-
-            console.log("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",testId)
-            
-            dataNode.className = "video-name";
-            dataNode.id = "data-" + nodeId;
-            dataNode.innerHTML = "<p>" + userData + "</p>";
-            event.element.parentNode.insertBefore(dataNode, event.element.nextSibling);
-
-           //capturing frame for analysi
-            const videoId = clientData;  // Unique ID for each stream
-            setInterval(() => {
-             captureFrame(event.element, videoId, userId,testId);
-            }, 10000); // 10,000 milliseconds = 10 seconds
-            
-            
-            
-        });
-                // Manually create a video element and attach the media stream
+       //capturing frame for analysi
+        const videoId = clientData;  // Unique ID for each stream
+        setInterval(() => {
+         captureFrame(event.element, videoId, userId,testId);
+        }, 10000); // 10,000 milliseconds = 10 seconds
         
         
-        // Add the video element to the DOM after subscription
-        subscriber.on('streamPlaying', () => {
-            console.log('Stream is now playing!');
-            
-        });
+        
+    });
+            // Manually create a video element and attach the media stream
+    
+    
+    // Add the video element to the DOM after subscription
+    subscriber.on('streamPlaying', () => {
+        console.log('Stream is now playing!');
+        
+    });
 });
 
 
-        // Handle participant leaving
-        session.on('streamDestroyed', (event) => {
-            const videoContainer = document.getElementById('video-container');
-            const videoElement = document.querySelector(`video[src="${event.stream.streamId}"]`);
-            if (videoElement) videoContainer.removeChild(videoElement);
-        });
-        
-        session.signal({
-            data: 'My custom message',  // Any string (optional)
-            to: [],                     // Array of Connection objects (optional. Broadcast to everyone if empty)
-            type: 'my-chat'             // The type of message (optional)
-            })
-            .then(() => {
-                console.log('Message successfully sent');
-            })
-            .catch(error => {
-                console.error(error);
-            });
-        session.on('signal', (event) => {
-                console.log(event.data); // Message
-                console.log(event.from); // Connection object of the sender
-                console.log(event.type); // The type of message
-            });
-
-            
-            // Sender of the adressed message (after calling 'session.connect')
-
-            session.on('signal:chat', event => {
-            const myConnectionId = session.connection.connectionId;  // Your connection ID
-            const senderConnectionId = event.from.connectionId;  // Sender's connection ID
-
-            if (myConnectionId !== senderConnectionId) {
-                //openPopup(event.data);
-
-                const messageData = JSON.parse(event.data);  // Convert the JSON string back to an objec
-
-                fetchMessage(event.data);
-
-                console.log("Message received from another user");
-            } else {
-                console.log("This is my own message; skipping.");
-            }
-            });
-
-      session.on('signal:screenshot', event => {
-        const message = event.data;
-        toggleChat();
-        fetchLog(message);
-       
-        console.log("chat started hererrrrrrrrrrrr")
-      });
-    // Connect to the session
-    session.connect(token)
-        .catch((error) => {
-            console.error('Error connecting to the session:', error);
-        });
+    // Handle participant leaving
+    session.on('streamDestroyed', (event) => {
+        const videoContainer = document.getElementById('video-container');
+        const videoElement = document.querySelector(`video[src="${event.stream.streamId}"]`);
+        if (videoElement) videoContainer.removeChild(videoElement);
     });
     
+    session.signal({
+        data: 'My custom message',  // Any string (optional)
+        to: [],                     // Array of Connection objects (optional. Broadcast to everyone if empty)
+        type: 'my-chat'             // The type of message (optional)
+        })
+        .then(() => {
+            console.log('Message successfully sent');
+        })
+        .catch(error => {
+            console.error(error);
+        });
+    session.on('signal', (event) => {
+            console.log(event.data); // Message
+            console.log(event.from); // Connection object of the sender
+            console.log(event.type); // The type of message
+        });
+
+        
+        // Sender of the adressed message (after calling 'session.connect')
+
+        session.on('signal:chat', event => {
+        const myConnectionId = session.connection.connectionId;  // Your connection ID
+        const senderConnectionId = event.from.connectionId;  // Sender's connection ID
+
+        if (myConnectionId !== senderConnectionId) {
+            //openPopup(event.data);
+
+            const messageData = JSON.parse(event.data);  // Convert the JSON string back to an objec
+
+            fetchMessage(event.data);
+
+            console.log("Message received from another user");
+        } else {
+            console.log("This is my own message; skipping.");
+        }
+        });
+
+  session.on('signal:screenshot', event => {
+    const message = event.data;
+    toggleChat();
+    fetchLog(message);
+   
+    console.log("chat started hererrrrrrrrrrrr")
+  });
+// Connect to the session
+session.connect(token)
+    .catch((error) => {
+        console.error('Error connecting to the session:', error);
+    });
+});
+
 });
 
 
 const SESSION_URL = 'http://localhost:4443/api/sessions';
 
 async function createSession(sessionId) {
-	console.log('SESSION ID IS:', sessionId);
-	const csrftoken = getCSRFToken();
-    try {
-		const response = await fetch(`http://127.0.0.1:8000/video/create_session/`, {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Basic ' + btoa('OPENVIDUAPP:my_secret'),  // Replace with your actual OpenVidu secret
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrftoken,  // Include CSRF token if required by your backend
-            },
-            body: JSON.stringify({ customSessionId: sessionId }),
+console.log('SESSION ID IS:', sessionId);
+const csrftoken = getCSRFToken();
+try {
+    const response = await fetch(`http://127.0.0.1:8000/video/create_session/`, {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Basic ' + btoa('OPENVIDUAPP:my_secret'),  // Replace with your actual OpenVidu secret
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrftoken,  // Include CSRF token if required by your backend
+        },
+        body: JSON.stringify({ customSessionId: sessionId }),
 
-		});
-        console.log('response at front end from crearing session',response );
-        if (!response.ok) {
+    });
+    console.log('response at front end from crearing session',response );
+    if (!response.ok) {
 
-			if (response.status === 409) {
-				// Session already exists
-				const sessionData = await response.json();
-				console.log('Session already exists:', sessionData.customSessionId);
-				return sessionData.customSessionId;
-				
-			} else {
-				// Other errors
-				const errorDetails = await response.json().catch(() => null); // Handle cases where response isn't JSON
-				throw new Error(
-					`HTTP Error: ${response.status} ${response.statusText}\n` +
-					`Details: ${JSON.stringify(errorDetails)}`
-				);
-			}
-
-            // Parse error details if possible
-            
-        }else{
+        if (response.status === 409) {
+            // Session already exists
             const sessionData = await response.json();
-			console.log('Session Created:', sessionData);
-			return sessionData.sessionId;  
+            console.log('Session already exists:', sessionData.customSessionId);
+            return sessionData.customSessionId;
+            
+        } else {
+            // Other errors
+            const errorDetails = await response.json().catch(() => null); // Handle cases where response isn't JSON
+            throw new Error(
+                `HTTP Error: ${response.status} ${response.statusText}\n` +
+                `Details: ${JSON.stringify(errorDetails)}`
+            );
         }
 
-    } catch (error) {
-        console.error('Error creating session:', error.message || error);
+        // Parse error details if possible
+        
+    }else{
+        const sessionData = await response.json();
+        console.log('Session Created:', sessionData);
+        return sessionData.sessionId;  
     }
+
+} catch (error) {
+    console.error('Error creating session:', error.message || error);
+}
 }
 async function createToken(sessionId,username) {
 
-    const csrftoken = getCSRFToken();  // Assuming you're using CSRF token protection, replace this if necessary
+const csrftoken = getCSRFToken();  // Assuming you're using CSRF token protection, replace this if necessary
 
-    console.log('Requesting token for sessionId:', sessionId);
+console.log('Requesting token for sessionId:', sessionId);
 
-    try {
-        const response = await fetch(`http://127.0.0.1:8000/video/generate_token/${sessionId}/`, {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Basic ' + btoa('OPENVIDUAPP:my_secret'),  // Replace with your actual OpenVidu secret
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrftoken,  // Include CSRF token if required by your backend
-            },
-            body: JSON.stringify({ username: username, customSessionId: sessionId }), // Send the participant's username in the body
-        });
+try {
+    const response = await fetch(`http://127.0.0.1:8000/video/generate_token/${sessionId}/`, {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Basic ' + btoa('OPENVIDUAPP:my_secret'),  // Replace with your actual OpenVidu secret
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrftoken,  // Include CSRF token if required by your backend
+        },
+        body: JSON.stringify({ username: username, customSessionId: sessionId }), // Send the participant's username in the body
+    });
 
-        if (!response.ok) {
-            throw new Error(`Request failed with status ${response.status}`);
-        }
-
-        const data = await response.json();  // Parse the JSON response
-    
-        return data; 
-         // Return the response data (token)
-    } catch (error) {
-        console.error('Error occurred while fetching token:', error);
-        throw error;  // Throw error for further handling if needed
+    if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
     }
+
+    const data = await response.json();  // Parse the JSON response
+
+    return data; 
+     // Return the response data (token)
+} catch (error) {
+    console.error('Error occurred while fetching token:', error);
+    throw error;  // Throw error for further handling if needed
+}
 }
 
 
 
 function getCSRFToken() {
-	const name = 'csrftoken';
-	const cookies = document.cookie.split(';');
-	for (let cookie of cookies) {
-		const [key, value] = cookie.trim().split('=');
-		if (key === name) {
-			return decodeURIComponent(value);
-		}
-	}
-	return null;
+const name = 'csrftoken';
+const cookies = document.cookie.split(';');
+for (let cookie of cookies) {
+    const [key, value] = cookie.trim().split('=');
+    if (key === name) {
+        return decodeURIComponent(value);
+    }
+}
+return null;
 }
 
 function generateRandomString(length) {
-    return Math.random().toString(36).substring(2, 2 + length);
+return Math.random().toString(36).substring(2, 2 + length);
 }
 function addVideoToGrid(videoElement) {
-    const videoContainer = document.getElementById('video-container');
-    videoContainer.appendChild(videoElement);
+const videoContainer = document.getElementById('video-container');
+videoContainer.appendChild(videoElement);
 }
 
 function addVideoToGrid(videoElement) {
-    const videoContainer = document.getElementById('video-container');
-    videoContainer.appendChild(videoElement);
-    updateGridLayout();
+const videoContainer = document.getElementById('video-container');
+videoContainer.appendChild(videoElement);
+updateGridLayout();
 }
 
-        // Function to update the grid layout dynamically
+    // Function to update the grid layout dynamically
 function updateGridLayout() {
-    const videoContainer = document.getElementById('video-container');
-    const videos = videoContainer.children.length;
-    videoContainer.style.gridTemplateColumns = `repeat(${Math.ceil(Math.sqrt(videos))}, 1fr)`;
+const videoContainer = document.getElementById('video-container');
+const videos = videoContainer.children.length;
+videoContainer.style.gridTemplateColumns = `repeat(${Math.ceil(Math.sqrt(videos))}, 1fr)`;
 }
 
 function captureFrame(videoElement,videoId,userId,testId) {
-    // Create a canvas to capture the video frame
-    console.log('videoElement',videoElement);
-    const canvas = document.createElement('canvas');
-    canvas.width = videoElement.videoWidth;
-    canvas.height = videoElement.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+// Create a canvas to capture the video frame
+console.log('videoElement',videoElement);
+const canvas = document.createElement('canvas');
+canvas.width = videoElement.videoWidth;
+canvas.height = videoElement.videoHeight;
+const ctx = canvas.getContext('2d');
+ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
 
-    // Convert the frame to base64
-    const frameData = canvas.toDataURL('image/jpeg');
-    console.log('frame datata front end',frameData);
-    
-    // Send the frame to Django for analysis
-    sendFrameToServer(frameData, videoId,userId,testId);
+// Convert the frame to base64
+const frameData = canvas.toDataURL('image/jpeg');
+console.log('frame datata front end',frameData);
+
+// Send the frame to Django for analysis
+sendFrameToServer(frameData, videoId,userId,testId);
 }
 async function sendFrameToServer(frameData, videoId,userId,testId) {
-    const csrftoken = getCSRFToken();  
-    const response = await fetch(`http://127.0.0.1:8000/video/process_frame/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrftoken,  // Include CSRF token if required by your backend
-            },
-            body: JSON.stringify({ frame: frameData, videoId: videoId, userId: userId, testId: testId}),// Send the participant's username in the body
-        });
-        const data = await response.json();
-        //const detectionNames = data.result_phone.detections.map(detection => detection.name);
-        // const hasOtherObjects = detectionNames.some(detection => detection.name !== "person");
-        //const nonPersonObjects = detectionNames.filter(detection => detection !== "person");
-        //const hasOtherObjects = nonPersonObjects.length > 0;
+const csrftoken = getCSRFToken();  
+const response = await fetch(`http://127.0.0.1:8000/video/process_frame/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrftoken,  // Include CSRF token if required by your backend
+        },
+        body: JSON.stringify({ frame: frameData, videoId: videoId, userId: userId, testId: testId}),// Send the participant's username in the body
+    });
+    const data = await response.json();
+    //const detectionNames = data.result_phone.detections.map(detection => detection.name);
+    // const hasOtherObjects = detectionNames.some(detection => detection.name !== "person");
+    //const nonPersonObjects = detectionNames.filter(detection => detection !== "person");
+    //const hasOtherObjects = nonPersonObjects.length > 0;
 
-        // append message to chatcontainer
+    // append message to chatcontainer
 
-      //sendMonitoringLog(userId, testId, type, data, screenshotData) ;
+  //sendMonitoringLog(userId, testId, type, data, screenshotData) ;
 
 
-        //console.log("Contains objects other than 'person':", hasOtherObjects);
-        console.log('response from process frame1', data.result_pred_face_pose.logged);
-        console.log('response from process frame2', data.result_face);
-        console.log('response from process frame3', data.result_phone);
-       // console.log('result_pred_face_pose:------', data.result_pred_face_pose);
+    //console.log("Contains objects other than 'person':", hasOtherObjects);
+    console.log('response from process frame1', data.result_pred_face_pose.logged);
+    console.log('response from process frame2', data.result_face);
+    console.log('response from process frame3', data.result_phone);
+   // console.log('result_pred_face_pose:------', data.result_pred_face_pose);
 
-        //console.log('result_face:------', data.result_face.logged);
-        //console.log('result_phone:------', nonPersonObjects);
-        if (data.result_pred_face_pose.logged) {
-            console.log("LogID",data.result_pred_face_pose.logId);
-            fetchLog2(data.result_pred_face_pose.logId);
-         } 
-        else if (data.result_face.logged) {
-            console.log("LogID",data.result_face.logId);
-            fetchLog2(data.result_face.logId);
-        }
-        else if (data.result_phone.logged) {
-            console.log("LogID",data.result_phone.logId);
-            fetchLog2(data.result_phone.logId);
-        }
-        else{
-            console.log("unkown state");
-        } 
-             
+    //console.log('result_face:------', data.result_face.logged);
+    //console.log('result_phone:------', nonPersonObjects);
+    if (data.result_pred_face_pose.logged) {
+        console.log("LogID",data.result_pred_face_pose.logId);
+        fetchLog2(data.result_pred_face_pose.logId);
+     } 
+    else if (data.result_face.logged) {
+        console.log("LogID",data.result_face.logId);
+        fetchLog2(data.result_face.logId);
+    }
+    else if (data.result_phone.logged) {
+        console.log("LogID",data.result_phone.logId);
+        fetchLog2(data.result_phone.logId);
+    }
+    else{
+        console.log("unkown state");
+    } 
+         
 }
 
 
 
-   
+
 
 function toggleChat() {
-    const chatContainer = document.getElementById('chat-container');
-    const openChatButton = document.getElementById('open-chat');
-    
-    if (chatContainer.style.display === 'none' || chatContainer.style.display === '') {
-        chatContainer.style.display = 'flex';
-        openChatButton.style.display = 'none'; // Hide open button when chat is open
-    } else {
-        chatContainer.style.display = 'none';
-        openChatButton.style.display = 'block'; // Show open button when chat is closed
-    }
+const chatContainer = document.getElementById('chat-container');
+const openChatButton = document.getElementById('open-chat');
+
+if (chatContainer.style.display === 'none' || chatContainer.style.display === '') {
+    chatContainer.style.display = 'flex';
+    openChatButton.style.display = 'none'; // Hide open button when chat is open
+} else {
+    chatContainer.style.display = 'none';
+    openChatButton.style.display = 'block'; // Show open button when chat is closed
+}
 }
 
 function toggleLogs() {
-    const chatContainer = document.getElementById('log-container');
-    const openChatButton = document.getElementById('open-log');
-    
-    if (chatContainer.style.display === 'none' || chatContainer.style.display === '') {
-        chatContainer.style.display = 'flex';
-        openChatButton.style.display = 'none'; // Hide open button when chat is open
-    } else {
-        chatContainer.style.display = 'none';
-        openChatButton.style.display = 'block'; // Show open button when chat is closed
-    }
+const chatContainer = document.getElementById('log-container');
+const openChatButton = document.getElementById('open-log');
+
+if (chatContainer.style.display === 'none' || chatContainer.style.display === '') {
+    chatContainer.style.display = 'flex';
+    openChatButton.style.display = 'none'; // Hide open button when chat is open
+} else {
+    chatContainer.style.display = 'none';
+    openChatButton.style.display = 'block'; // Show open button when chat is closed
+}
 }
 
 // Send message and add it to the chat
 function sendMessage() {
-    const messageInput = document.getElementById('message-input');
-    const chatMessages = document.getElementById('chat-messages');
-    const userId = {{ user.id }};
-    const testId = "{{ test.id|escapejs }}";
+const messageInput = document.getElementById('message-input');
+const chatMessages = document.getElementById('chat-messages');
+const userId = {{ user.id }};
+const testId = "{{ test.id|escapejs }}";
 
-    const messageText = messageInput.value.trim();
+const messageText = messageInput.value.trim();
 
-    if (messageText) {
-        console.log('sart sending');
-        console.log(session)
+if (messageText) {
+    console.log('sart sending');
+    console.log(session)
 
-        logMessage(userId, testId, "message", messageText)
-       
+    logMessage(userId, testId, "message", messageText)
+   
 
-        // Clear input field and scroll to bottom
-        messageInput.value = '';
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
+    // Clear input field and scroll to bottom
+    messageInput.value = '';
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 }
 async function logMessage(userId, testId, activityType, activityData) {
-    const csrftoken = getCSRFToken(); 
-    try {
+const csrftoken = getCSRFToken(); 
+try {
+
    
-       
-        const response = await fetch('http://127.0.0.1:8000/video/upload_monitoring_message/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-                user_id: userId,
-                test_id: testId,
-                activity_type: activityType,
-                activityData: activityData,
-                is_admin: true, // Pass JSON data
-            }),
-        });
-
-        if (response.ok) {
-            const result = await response.json();
-            if (session) {
-            console.log('Session sending chat message:');
-            session.signal({
-                type: 'chat',
-                data: result.log_id,
-            }).catch(error => {
-                console.error('Error sending chat message:', error);
-            });
-            fetchMessage(result.log_id);
-            } else {
-                console.warn('Session is not connected. Cannot send message.');
-            }
-            console.log('Monitoring log created successfully:', result);
-        } else {
-            const error = await response.json();
-            console.error('Error creating message log:');
-        }
-    } catch (error) {
-        console.error('Network error:', error);
-    }
-}
-
-async function fetchLogs(testId) {
-    const chatMessages = document.getElementById('log-messages');
-    try {
-        // API endpoint to fetch logs
-        const response = await fetch(`http://127.0.0.1:8000/video/get_logs/${testId}/`);
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch logs: ${response.statusText}`);
-        }
-
-        // Parse the response JSON
-        const data = await response.json();
-
-        // Get the chat container element
-       // const chatContainer = document.getElementById(chatContainerId);
-
-        // Clear existing content in the chat container (optional)
-       // chatContainer.innerHTML = '';
-
-        // Append logs to the chat container
-        console.log(data.logs);
-        data.logs.forEach((log, index) => {
-        console.log(`Processing log #${index}:`, log.activity_type);
-
-         // Create a new div for each log (for styling)
-         const messageDiv = document.createElement('div');
-            messageDiv.style.padding = '10px';
-            messageDiv.style.marginBottom = '10px';
-            messageDiv.style.backgroundColor = '#f5f5f5';
-            messageDiv.style.borderRadius = '5px';
-            messageDiv.style.border = '1px solid #ddd';
-
-            // Create a list item inside the div
-            const logElement = document.createElement('li');
-            logElement.innerText = `[${log.timestamp}] ${log.candidate.full_name},  ${log.data}`;
-            logElement.style.listStyleType = 'none'; // Optional, removes bullet points
-            logElement.style.margin = '0';
-            logElement.style.padding = '0';
-
-            // Append the list item to the div
-            messageDiv.appendChild(logElement);
-
-            
-
-            const url = `/video/monitoring-log/${log.id}/`;
-
-       // console.log(url); 
-
-
-        const link = document.createElement('a');
-        link.href = url; // Set the URL from the fetched data
-       link.textContent = 'view Screenshot'; // Link text
-        link.target = '_blank'; // Open in a new tab (optional)// Set a default filename (optional)
-        messageDiv.appendChild(link);
-
-            // Append the div to the chat container
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTo({
-                top: chatMessages.scrollHeight, // Use chatMessages.scrollHeight to scroll to the bottom
-                behavior: 'smooth' // Optional: Adds smooth scrolling
-            });
-           
+    const response = await fetch('http://127.0.0.1:8000/video/upload_monitoring_message/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            user_id: userId,
+            test_id: testId,
+            activity_type: activityType,
+            activityData: activityData,
+            is_admin: true, // Pass JSON data
+        }),
     });
-    } catch (error) {
-        console.error('Error fetching logs:', error);
-    }
-}
-async function fetchLog(logId) {
-    const chatMessages = document.getElementById('log-messages');
-    try {
-        // API endpoint to fetch logs
-        const response = await fetch(`http://127.0.0.1:8000/video/get_log/${logId}/`);
 
-        if (!response.ok) {
-            throw new Error(`Failed to fetch logs: ${response.statusText}`);
-        }
-
-        // Parse the response JSON
-        const data = await response.json();
-        const log=data.logs;
-        console.log('logssss',log);
-        const messageDiv = document.createElement('div');
-            messageDiv.style.padding = '10px';
-            messageDiv.style.marginBottom = '10px';
-            messageDiv.style.backgroundColor = '#f5f5f5';
-            messageDiv.style.borderRadius = '5px';
-            messageDiv.style.border = '1px solid #ddd';
-
-            // Create a list item inside the div
-            const logElement = document.createElement('li');
-            logElement.innerText = `[${log.timestamp}] ${log.candidate.full_name}, ${log.data}`;
-            logElement.style.listStyleType = 'none'; // Optional, removes bullet points
-            logElement.style.margin = '0';
-            logElement.style.padding = '0';
-
-            // Append the list item to the div
-            messageDiv.appendChild(logElement);
-
-            const url = `/video/monitoring-log/${log.id}/`;
-
-       // console.log(url); 
-
-
-        const link = document.createElement('a');
-        link.href = url; // Set the URL from the fetched data
-        link.textContent = 'view Screenshot'; // Link text
-        link.target = '_blank'; // Open in a new tab (optional)// Set a default filename (optional)
-        messageDiv.appendChild(link);
-
-            // Append the div to the chat container
-            chatMessages.appendChild(messageDiv);
-
-      
-    } catch (error) {
-        console.error('Error fetching logs:', error);
-    }
-}
-async function fetchLog2(logId) {
-    const chatMessages = document.getElementById('log-messages');
-    try {
-        // API endpoint to fetch logs
-        const response = await fetch(`http://127.0.0.1:8000/video/get_log/${logId}/`);
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch logs: ${response.statusText}`);
-        }
-
-        // Parse the response JSON
-        const data = await response.json();
-        const log=data.logs;
-        console.log('logssss',log);
-        const messageDiv = document.createElement('div');
-            messageDiv.style.padding = '10px';
-            messageDiv.style.marginBottom = '10px';
-            messageDiv.style.backgroundColor = '#f5f5f5';
-            messageDiv.style.borderRadius = '5px';
-            messageDiv.style.border = '1px solid #ddd';
-
-            // Create a list item inside the div
-            const logElement = document.createElement('li');
-            logElement.innerText = `[${log.timestamp}] ${log.candidate.full_name}, ${log.data}`;
-            logElement.style.listStyleType = 'none'; // Optional, removes bullet points
-            logElement.style.margin = '0';
-            logElement.style.padding = '0';
-
-            // Append the list item to the div
-            messageDiv.appendChild(logElement);
-
-            const url = `/video/monitoring-log/${log.id}/`;
-
-       // console.log(url); 
-
-
-        const link = document.createElement('a');
-       // link.href = url; // Set the URL from the fetched data
-        //link.textContent = 'view Screenshot'; // Link text
-       // link.target = '_blank'; // Open in a new tab (optional)// Set a default filename (optional)
-       // messageDiv.appendChild(link);
-
-            // Append the div to the chat container
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTo({
-                top: chatMessages.scrollHeight, // Use chatMessages.scrollHeight to scroll to the bottom
-                behavior: 'smooth' // Optional: Adds smooth scrolling
-            });
-
-      
-    } catch (error) {
-        console.error('Error fetching logs:', error);
-    }
-}
-async function fetchMessage(logId) {
-    const chatMessages = document.getElementById('chat-messages');
-    try {
-        // API endpoint to fetch logs
-        const response = await fetch(`http://127.0.0.1:8000/video/get_log/${logId}/`);
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch logs: ${response.statusText}`);
-        }
-
-        // Parse the response JSON
-        const data = await response.json();
-        const log=data.logs;
-        console.log('logssss',log);
-        const messageDiv = document.createElement('div');
-            messageDiv.style.padding = '10px';
-            messageDiv.style.marginBottom = '10px';
-            messageDiv.style.backgroundColor = '#f5f5f5';
-            messageDiv.style.borderRadius = '5px';
-            messageDiv.style.border = '1px solid #ddd';
-
-            // Create a list item inside the div
-            const logElement = document.createElement('li');
-            //logElement.innerText = `[${log.timestamp}] ${log.candidate.full_name}, ${log.data}`;
-            const isAdmin = (log.is_admin === true || log.is_admin === 'true');
-            logElement.innerText = `[${log.timestamp}] ${isAdmin ? 'Admin' : log.candidate.full_name}, ${log.data}`;
-
-            logElement.style.listStyleType = 'none'; // Optional, removes bullet points
-            logElement.style.margin = '0';
-            logElement.style.padding = '0';
-
-            // Append the list item to the div
-            messageDiv.appendChild(logElement);
-
-            const url = `/video/monitoring-log/${log.id}/`;
-
-       // console.log(url); 
-
-
-        const link = document.createElement('a');
-       // link.href = url; // Set the URL from the fetched data
-        //link.textContent = 'view Screenshot'; // Link text
-       // link.target = '_blank'; // Open in a new tab (optional)// Set a default filename (optional)
-       // messageDiv.appendChild(link);
-
-            // Append the div to the chat container
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTo({
-                top: chatMessages.scrollHeight, // Use chatMessages.scrollHeight to scroll to the bottom
-                behavior: 'smooth' // Optional: Adds smooth scrolling
-            });
-
-      
-    } catch (error) {
-        console.error('Error fetching logs:', error);
-    }
-}
-
-async function sendMonitoringLog(userId, testId, activityType, activityData, screenshotDataURL) {
-    const csrftoken = getCSRFToken(); 
-    try {
-   
-       
-        const response = await fetch('http://127.0.0.1:8000/video/upload-monitoring-log/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-                user_id: userId,
-                test_id: testId,
-                activity_type: activityType,
-                activityData: activityData, // Pass JSON data
-                screenshot: screenshotDataURL,      // Base64-encoded image
-            }),
+    if (response.ok) {
+        const result = await response.json();
+        if (session) {
+        console.log('Session sending chat message:');
+        session.signal({
+            type: 'chat',
+            data: result.log_id,
+        }).catch(error => {
+            console.error('Error sending chat message:', error);
         });
-
-        if (response.ok) {
-            const result = await response.json();
-            if (session) {
-            console.log('Session sending chat message:');
-            session.signal({
-                type: 'screenshot',
-                data: result.log_id,
-            }).catch(error => {
-                console.error('Error sending chat message:', error);
-            });
+        fetchMessage(result.log_id);
         } else {
             console.warn('Session is not connected. Cannot send message.');
         }
-            console.log('Monitoring log created successfully:', result);
-        } else {
-            const error = await response.json();
-            console.error('Error creating monitoring log:');
-        }
-    } catch (error) {
-        console.error('Network error:', error);
+        console.log('Monitoring log created successfully:', result);
+    } else {
+        const error = await response.json();
+        console.error('Error creating message log:');
     }
+} catch (error) {
+    console.error('Network error:', error);
+}
+}
+
+async function fetchLogs(testId) {
+const chatMessages = document.getElementById('log-messages');
+try {
+    // API endpoint to fetch logs
+    const response = await fetch(`http://127.0.0.1:8000/video/get_logs/${testId}/`);
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch logs: ${response.statusText}`);
+    }
+
+    // Parse the response JSON
+    const data = await response.json();
+
+    // Get the chat container element
+   // const chatContainer = document.getElementById(chatContainerId);
+
+    // Clear existing content in the chat container (optional)
+   // chatContainer.innerHTML = '';
+
+    // Append logs to the chat container
+    console.log(data.logs);
+    data.logs.forEach((log, index) => {
+    console.log(`Processing log #${index}:`, log.activity_type);
+
+     // Create a new div for each log (for styling)
+     const messageDiv = document.createElement('div');
+        messageDiv.style.padding = '10px';
+        messageDiv.style.marginBottom = '10px';
+        messageDiv.style.backgroundColor = '#f5f5f5';
+        messageDiv.style.borderRadius = '5px';
+        messageDiv.style.border = '1px solid #ddd';
+
+        // Create a list item inside the div
+        const logElement = document.createElement('li');
+        logElement.innerText = `[${log.timestamp}] ${log.candidate.full_name},  ${log.data}`;
+        logElement.style.listStyleType = 'none'; // Optional, removes bullet points
+        logElement.style.margin = '0';
+        logElement.style.padding = '0';
+
+        // Append the list item to the div
+        messageDiv.appendChild(logElement);
+
+        
+
+        const url = `/video/monitoring-log/${log.id}/`;
+
+   // console.log(url); 
+
+
+    const link = document.createElement('a');
+    link.href = url; // Set the URL from the fetched data
+   link.textContent = 'view Screenshot'; // Link text
+    link.target = '_blank'; // Open in a new tab (optional)// Set a default filename (optional)
+    messageDiv.appendChild(link);
+
+        // Append the div to the chat container
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTo({
+            top: chatMessages.scrollHeight, // Use chatMessages.scrollHeight to scroll to the bottom
+            behavior: 'smooth' // Optional: Adds smooth scrolling
+        });
+       
+});
+} catch (error) {
+    console.error('Error fetching logs:', error);
+}
+}
+async function fetchLog(logId) {
+const chatMessages = document.getElementById('log-messages');
+try {
+    // API endpoint to fetch logs
+    const response = await fetch(`http://127.0.0.1:8000/video/get_log/${logId}/`);
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch logs: ${response.statusText}`);
+    }
+
+    // Parse the response JSON
+    const data = await response.json();
+    const log=data.logs;
+    console.log('logssss',log);
+    const messageDiv = document.createElement('div');
+        messageDiv.style.padding = '10px';
+        messageDiv.style.marginBottom = '10px';
+        messageDiv.style.backgroundColor = '#f5f5f5';
+        messageDiv.style.borderRadius = '5px';
+        messageDiv.style.border = '1px solid #ddd';
+
+        // Create a list item inside the div
+        const logElement = document.createElement('li');
+        logElement.innerText = `[${log.timestamp}] ${log.candidate.full_name}, ${log.data}`;
+        logElement.style.listStyleType = 'none'; // Optional, removes bullet points
+        logElement.style.margin = '0';
+        logElement.style.padding = '0';
+
+        // Append the list item to the div
+        messageDiv.appendChild(logElement);
+
+        const url = `/video/monitoring-log/${log.id}/`;
+
+   // console.log(url); 
+
+
+    const link = document.createElement('a');
+    link.href = url; // Set the URL from the fetched data
+    link.textContent = 'view Screenshot'; // Link text
+    link.target = '_blank'; // Open in a new tab (optional)// Set a default filename (optional)
+    messageDiv.appendChild(link);
+
+        // Append the div to the chat container
+        chatMessages.appendChild(messageDiv);
+
+  
+} catch (error) {
+    console.error('Error fetching logs:', error);
+}
+}
+async function fetchLog2(logId) {
+const chatMessages = document.getElementById('log-messages');
+try {
+    // API endpoint to fetch logs
+    const response = await fetch(`http://127.0.0.1:8000/video/get_log/${logId}/`);
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch logs: ${response.statusText}`);
+    }
+
+    // Parse the response JSON
+    const data = await response.json();
+    const log=data.logs;
+    console.log('logssss',log);
+    const messageDiv = document.createElement('div');
+        messageDiv.style.padding = '10px';
+        messageDiv.style.marginBottom = '10px';
+        messageDiv.style.backgroundColor = '#f5f5f5';
+        messageDiv.style.borderRadius = '5px';
+        messageDiv.style.border = '1px solid #ddd';
+
+        // Create a list item inside the div
+        const logElement = document.createElement('li');
+        logElement.innerText = `[${log.timestamp}] ${log.candidate.full_name}, ${log.data}`;
+        logElement.style.listStyleType = 'none'; // Optional, removes bullet points
+        logElement.style.margin = '0';
+        logElement.style.padding = '0';
+
+        // Append the list item to the div
+        messageDiv.appendChild(logElement);
+
+        const url = `/video/monitoring-log/${log.id}/`;
+
+   // console.log(url); 
+
+
+    const link = document.createElement('a');
+   // link.href = url; // Set the URL from the fetched data
+    //link.textContent = 'view Screenshot'; // Link text
+   // link.target = '_blank'; // Open in a new tab (optional)// Set a default filename (optional)
+   // messageDiv.appendChild(link);
+
+        // Append the div to the chat container
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTo({
+            top: chatMessages.scrollHeight, // Use chatMessages.scrollHeight to scroll to the bottom
+            behavior: 'smooth' // Optional: Adds smooth scrolling
+        });
+
+  
+} catch (error) {
+    console.error('Error fetching logs:', error);
+}
+}
+async function fetchMessage(logId) {
+const chatMessages = document.getElementById('chat-messages');
+try {
+    // API endpoint to fetch logs
+    const response = await fetch(`http://127.0.0.1:8000/video/get_log/${logId}/`);
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch logs: ${response.statusText}`);
+    }
+
+    // Parse the response JSON
+    const data = await response.json();
+    const log=data.logs;
+    console.log('logssss',log);
+    const messageDiv = document.createElement('div');
+        messageDiv.style.padding = '10px';
+        messageDiv.style.marginBottom = '10px';
+        messageDiv.style.backgroundColor = '#f5f5f5';
+        messageDiv.style.borderRadius = '5px';
+        messageDiv.style.border = '1px solid #ddd';
+
+        // Create a list item inside the div
+        const logElement = document.createElement('li');
+        //logElement.innerText = `[${log.timestamp}] ${log.candidate.full_name}, ${log.data}`;
+        const isAdmin = (log.is_admin === true || log.is_admin === 'true');
+        logElement.innerText = `[${log.timestamp}] ${isAdmin ? 'Admin' : log.candidate.full_name}, ${log.data}`;
+
+        logElement.style.listStyleType = 'none'; // Optional, removes bullet points
+        logElement.style.margin = '0';
+        logElement.style.padding = '0';
+
+        // Append the list item to the div
+        messageDiv.appendChild(logElement);
+
+        const url = `/video/monitoring-log/${log.id}/`;
+
+   // console.log(url); 
+
+
+    const link = document.createElement('a');
+   // link.href = url; // Set the URL from the fetched data
+    //link.textContent = 'view Screenshot'; // Link text
+   // link.target = '_blank'; // Open in a new tab (optional)// Set a default filename (optional)
+   // messageDiv.appendChild(link);
+
+        // Append the div to the chat container
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTo({
+            top: chatMessages.scrollHeight, // Use chatMessages.scrollHeight to scroll to the bottom
+            behavior: 'smooth' // Optional: Adds smooth scrolling
+        });
+
+  
+} catch (error) {
+    console.error('Error fetching logs:', error);
+}
+}
+
+async function sendMonitoringLog(userId, testId, activityType, activityData, screenshotDataURL) {
+const csrftoken = getCSRFToken(); 
+try {
+
+   
+    const response = await fetch('http://127.0.0.1:8000/video/upload-monitoring-log/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            user_id: userId,
+            test_id: testId,
+            activity_type: activityType,
+            activityData: activityData, // Pass JSON data
+            screenshot: screenshotDataURL,      // Base64-encoded image
+        }),
+    });
+
+    if (response.ok) {
+        const result = await response.json();
+        if (session) {
+        console.log('Session sending chat message:');
+        session.signal({
+            type: 'screenshot',
+            data: result.log_id,
+        }).catch(error => {
+            console.error('Error sending chat message:', error);
+        });
+    } else {
+        console.warn('Session is not connected. Cannot send message.');
+    }
+        console.log('Monitoring log created successfully:', result);
+    } else {
+        const error = await response.json();
+        console.error('Error creating monitoring log:');
+    }
+} catch (error) {
+    console.error('Network error:', error);
+}
 }
 async function fetchMessages(testId) {
-    const chatMessages = document.getElementById('chat-messages');
-    try {
-        // API endpoint to fetch logs
-        const response = await fetch(`http://127.0.0.1:8000/video/get_messages/${testId}/`);
+const chatMessages = document.getElementById('chat-messages');
+try {
+    // API endpoint to fetch logs
+    const response = await fetch(`http://127.0.0.1:8000/video/get_messages/${testId}/`);
 
-        if (!response.ok) {
-            throw new Error(`Failed to fetch logs: ${response.statusText}`);
-        }
-
-        // Parse the response JSON
-        const data = await response.json();
-
-        // Get the chat container element
-       // const chatContainer = document.getElementById(chatContainerId);
-
-        // Clear existing content in the chat container (optional)
-       // chatContainer.innerHTML = '';
-
-        // Append logs to the chat container
-        console.log(data.logs);
-        data.logs.forEach((log, index) => {
-        console.log(`Processing log #${index}:`, log.activity_type);
-
-         // Create a new div for each log (for styling)
-         const messageDiv = document.createElement('div');
-            messageDiv.style.padding = '10px';
-            messageDiv.style.marginBottom = '10px';
-            messageDiv.style.backgroundColor = '#f5f5f5';
-            messageDiv.style.borderRadius = '5px';
-            messageDiv.style.border = '1px solid #ddd';
-
-            // Create a list item inside the div
-            const logElement = document.createElement('li');
-            const isAdmin = (log.is_admin === true || log.is_admin === 'true');
-            logElement.innerText = `[${log.timestamp}] ${isAdmin ? 'Admin' : log.candidate.full_name}, ${log.data}`;
-            logElement.style.listStyleType = 'none'; // Optional, removes bullet points
-            logElement.style.margin = '0';
-            logElement.style.padding = '0';
-
-            // Append the list item to the div
-            messageDiv.appendChild(logElement);
-
-            
-
-            const url = `/video/monitoring-log/${log.id}/`;
-
-       // console.log(url); 
-
-
-       
-
-            // Append the div to the chat container
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTo({
-                top: chatMessages.scrollHeight, // Use chatMessages.scrollHeight to scroll to the bottom
-                behavior: 'smooth' // Optional: Adds smooth scrolling
-            });
-           
-    });
-    } catch (error) {
-        console.error('Error fetching logs:', error);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch logs: ${response.statusText}`);
     }
+
+    // Parse the response JSON
+    const data = await response.json();
+
+    // Get the chat container element
+   // const chatContainer = document.getElementById(chatContainerId);
+
+    // Clear existing content in the chat container (optional)
+   // chatContainer.innerHTML = '';
+
+    // Append logs to the chat container
+    console.log(data.logs);
+    data.logs.forEach((log, index) => {
+    console.log(`Processing log #${index}:`, log.activity_type);
+
+     // Create a new div for each log (for styling)
+     const messageDiv = document.createElement('div');
+        messageDiv.style.padding = '10px';
+        messageDiv.style.marginBottom = '10px';
+        messageDiv.style.backgroundColor = '#f5f5f5';
+        messageDiv.style.borderRadius = '5px';
+        messageDiv.style.border = '1px solid #ddd';
+
+        // Create a list item inside the div
+        const logElement = document.createElement('li');
+        const isAdmin = (log.is_admin === true || log.is_admin === 'true');
+        logElement.innerText = `[${log.timestamp}] ${isAdmin ? 'Admin' : log.candidate.full_name}, ${log.data}`;
+        logElement.style.listStyleType = 'none'; // Optional, removes bullet points
+        logElement.style.margin = '0';
+        logElement.style.padding = '0';
+
+        // Append the list item to the div
+        messageDiv.appendChild(logElement);
+
+        
+
+        const url = `/video/monitoring-log/${log.id}/`;
+
+   // console.log(url); 
+
+
+   
+
+        // Append the div to the chat container
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTo({
+            top: chatMessages.scrollHeight, // Use chatMessages.scrollHeight to scroll to the bottom
+            behavior: 'smooth' // Optional: Adds smooth scrolling
+        });
+       
+});
+} catch (error) {
+    console.error('Error fetching logs:', error);
+}
 }
 window.onload = () => {
 
 const testId={{test.id}};
 console.log('monitor loggedddddddddddddddddddddddddddddddddddddddddddddddddddddddd',testId);
- toggleChat();
- fetchLogs(testId);
- fetchMessages(testId)
+toggleChat();
+fetchLogs(testId);
+fetchMessages(testId)
 };
 
 </script>
-    {% endblock %}
-    
-    
-    
+{% endblock %}
+
+

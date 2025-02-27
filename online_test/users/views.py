@@ -230,6 +230,7 @@ def test_report(request,test_id):
         combined_data.append({
             'candidate': result.candidate,
             'total_marks': result.total_marks,
+            'test_marks':result.test.total_marks,
             'log_count': log_data['log_count'] if log_data else 0,  # Default to 0 if no log data
         })
 
@@ -700,18 +701,54 @@ def export_log_report_to_pdf(request, candidate_id):
 
 
 
+from openpyxl import Workbook
+def export_results_to_excel(request, test_id):
+    admin = Admin.objects.get(user=request.user)
 
-def export_results_to_excel(request):
-    # Define the resource for exporting
-    class ResultResource(resources.ModelResource):
-        class Meta:
-            model = Result
+    print('test_id', test_id)
 
-    # Create the resource and export
-    result_resource = ResultResource()
-    dataset = result_resource.export()
+    # Fetch the test instance based on the test_id and the admin's company
+    test = Test.objects.filter(id=test_id, candidates__company=admin.company).distinct().first()
 
-    # Return as HTTP response with Excel content type
-    response = HttpResponse(dataset.xlsx, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    if not test:
+        return HttpResponse("Test not found or unauthorized access", status=404)
+
+    # Fetch results for the test, filtering by company and test_id
+    results = Result.objects.filter(test=test).order_by('-total_marks')
+
+    # Fetch monitoring logs for the test, grouped by candidate, and count the logs for each candidate
+    logs_count = MonitoringLog.objects.filter(test=test).values('candidate', 'candidate__full_name')\
+        .annotate(log_count=Count('id')).order_by('-log_count')
+
+    # Combine the results and logs into a list of dictionaries
+    combined_data = []
+    for result in results:
+        log_data = next((log for log in logs_count if log['candidate'] == result.candidate.id), None)
+        combined_data.append({
+            'Candidate': result.candidate.full_name,
+            'Total Marks': result.total_marks,
+            'Test Marks': result.test.total_marks,
+            'Log Count': log_data['log_count'] if log_data else 0,  # Default to 0 if no log data
+        })
+
+    # Create an Excel workbook and worksheet
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Test Results"
+
+    # Write headers
+    headers = ["Candidate", "Total Marks", "Test Marks", "Log Count"]
+    ws.append(headers)
+
+    # Write data
+    for data in combined_data:
+        ws.append(list(data.values()))
+
+    # Create response object
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename="results.xlsx"'
+
+    # Save workbook to response
+    wb.save(response)
+
     return response

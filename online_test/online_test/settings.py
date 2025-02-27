@@ -30,20 +30,21 @@ AUTH_USER_MODEL = 'users.User'
 SECRET_KEY = 'django-insecure-8!sgw$9tsrqiv(45kc261alo$bh*0m1hh&07#(l7r_9)lrzv!8'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+
 DEBUG = True
-CORS_ALLOW_ALL_ORIGINS = True
+
+ALLOWED_HOSTS = ["*"]  # Allows all hosts
+
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True  # Allows all origins
+
 CORS_ALLOW_HEADERS = list(default_headers) + [
-    'x-csrf-token',  # Add this line to allow the CSRF token header
+    'x-csrf-token',  # Allows CSRF token in headers
 ]
 
-
-ALLOWED_HOSTS = [
-    
-]
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:4200",  # Angular development server
-    "http://127.0.0.1:4200",  # Angular running on localhost
-]
+# If using credentials (cookies, auth headers), add this:
+CORS_ALLOW_CREDENTIALS = True
+SECURE_SSL_REDIRECT = False  # Only for development
 
 # Application definition
 
@@ -69,6 +70,9 @@ INSTALLED_APPS = [
     'dal',
     'dal_select2',
     'import_export',
+    'django_extensions',
+
+    
 ]
 
 MIDDLEWARE = [
@@ -81,6 +85,13 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+CSP_DEFAULT_SRC = ("'self'",)
+CSP_SCRIPT_SRC = ("'self'", "'unsafe-inline'", "'unsafe-eval'", "https:")
+CSP_STYLE_SRC = ("'self'", "'unsafe-inline'", "https:")
+CSP_IMG_SRC = ("'self'", "data:")
+CSP_CONNECT_SRC = ("'self'", "https:") # ✅ Allows fonts from self, HTTPS, an
+
+
 
 ROOT_URLCONF = 'online_test.urls'
 

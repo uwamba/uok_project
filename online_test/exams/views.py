@@ -269,11 +269,13 @@ def create_subject(request):
             subject.save()
 
             #messages.success(request, "Subject created successfully!")
-            return redirect('admin_dashboard')  # Redirect to the subject list page
+            return redirect('create_subject')  # Redirect to the subject list page
     else:
         form = SubjectForm()
+    subjects = Subject.objects.all()  # Fetch all subjects
 
-    return render(request, 'create_subject.html', {'form': form})
+
+    return render(request, 'create_subject.html', {'form': form, 'subjects':subjects})
 
 
 
@@ -302,7 +304,8 @@ def register_candidate(request):
             user=user,
             company=company,
             date_of_birth=date_of_birth,
-            phone_number=phone_number
+            phone_number=phone_number,
+            full_name=full_name
         )
 
         return redirect('admin_dashboard')  # Redirect to a success page or any other page
@@ -369,24 +372,49 @@ def random_test_data(request):
 
     return test
 
+
 def import_questions(request):
+    
+    candidates = Candidate.objects.all()
+    subjects = Subject.objects.all()  # Fetch all subjects from the database
+    
     if request.method == 'POST':
-        form = ImportQuestionsForm(request.POST, request.FILES)
-        if form.is_valid():
+            form = ImportQuestionsForm(request.POST, request.FILES)
+
             # Open the uploaded Excel file
-            excel_file = request.FILES['file']
+            excel_file = request.FILES['questions_file']
             wb = openpyxl.load_workbook(excel_file)
             sheet = wb.active
 
-            # Randomize test data
-            test = random_test_data(request)  # Randomize and create test
+            # Get the test details from the form (including selected subject)
+            test_title = request.POST.get('test_title')
+            subject_id = request.POST.get('subject')
+            start_time = request.POST.get('start_time')
+            end_time = request.POST.get('end_time')
+            total_marks = request.POST.get('total_marks')
+            max_attempts = request.POST.get('max_attempts')
+            duration_minutes = int(request.POST.get('duration'))
 
+            # Create the test instance using the form data
+            test = Test.objects.create(
+                title=test_title,
+                subject_id=subject_id,
+                start_time = datetime.strptime(request.POST.get('start_time'), '%Y-%m-%dT%H:%M'),
+                end_time = datetime.strptime(request.POST.get('end_time'), '%Y-%m-%dT%H:%M'),
+
+                total_marks=total_marks,
+                max_attempts=max_attempts,
+                duration = timedelta(minutes=duration_minutes),
+                created_by=request.user  # Assign the logged-in admin
+            )
+
+            # Loop through the rows of the Excel file and create questions
             for row in sheet.iter_rows(min_row=2, values_only=True):  # Skip header row
                 question_text = row[0]  # Question text
                 marks = row[1]          # Marks
                 question_type = row[2]  # Question type (single, multiple, text)
 
-                # Create the Question object and link it to the random Test
+                # Create the Question object and link it to the test
                 question = Question.objects.create(
                     test=test,
                     text=question_text,
@@ -412,11 +440,13 @@ def import_questions(request):
                         print(f"Skipping empty option at row {row[0]}")  # Logging empty option
                         continue
 
-            return redirect('admin_dashboard')  # Redirect to a page that shows the questions
+            # Redirect to a page that shows the imported questions
+            return redirect('admin_dashboard')  # Replace with the appropriate view name for dashboard
     else:
         form = ImportQuestionsForm()
 
-    return render(request, 'import_questions.html', {'form': form})
+    return render(request, 'import_questions.html', {'form': form, 'subjects': subjects,'candidates':candidates})
+
 def export_questions(request):
     # Create an in-memory workbook
     wb = openpyxl.Workbook()

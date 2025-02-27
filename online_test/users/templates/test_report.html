@@ -21,7 +21,7 @@
     
         <!-- Export Buttons -->
         <div class="d-flex justify-content-between mb-3">
-            <a href="{% url 'export_results_to_excel' %}" class="btn btn-success btn-sm">Export to Excel</a>
+            <a href="{% url 'export_results_to_excel' test.id %}" class="btn btn-success btn-sm">Export to Excel</a>
         </div>
     
         <!-- Your table here -->
@@ -44,7 +44,7 @@
                 <tr>
                     <td>{{ forloop.counter }}</td> <!-- Display the number -->
                     <td>{{ data.candidate.full_name }}</td>
-                    <td>{{ data.total_marks }}</td>
+                    <td>{{ data.total_marks }}/{{data.test_marks}}</td>
                     <td>{{ data.log_count }}</td>
                     <td><a href="{% url 'candidate_log_report' data.candidate.id %}" class="btn btn-info btn-sm">View Details</a></td>
                 </tr>

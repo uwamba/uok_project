@@ -77,16 +77,16 @@
     <!-- Candidates Section -->
     <label class="form-label">Candidates:</label>
     <input type="text" id="candidateSearch" placeholder="Search Candidates..." onkeyup="filterCandidates()" class="form-control mb-2">
- 
-    <div class="border p-2 rounded overflow-auto" id="candidateList" style="max-height: 200px;">
+
+    <div class="border p-2 rounded" id="candidateList" style="max-height: 200px; overflow-y: auto; overflow-x: hidden;">
         {% for candidate in candidates %}
         <div class="candidate-item">
             <input type="checkbox" name="candidates" value="{{ candidate.id }}">
             <label>{{ candidate.full_name }}</label>
         </div>
-        
         {% endfor %}
     </div>
+
 
     <!-- Questions Section -->
     <h2 class="h4 mt-4 mb-3">Questions</h2>
